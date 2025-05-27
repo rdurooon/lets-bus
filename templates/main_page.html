@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="http://unpkg.com/leaflet/dist/leaflet.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+    <title>LetsBus</title>
+</head>
+<body>
+    <header>
+        <img src="{{url_for('static', filename='img/lets-bus_logo.png')}}" alt="Logo LetsBus">
+    </header>
+    <div id="map"></div>
+
+    <script src="http://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="{{url_for('static', filename='js/scripts.js')}}"></script>
+</body>
+</html>

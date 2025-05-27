@@ -1,1 +1,53 @@
-#map {height: 100vh;}
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: blueviolet;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header img {
+    height: 50px;
+    max-width: 90%;
+    object-fit: contain;
+}
+
+#map {
+    flex: 1;
+    height: calc(100vh - 80px);
+}
+
+.icone-onibus {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 4px solid #000;
+    background-color: white;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icone-onibus img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 600px) {
+    header img {
+        height: 40px;
+    }
+
+    #map {
+        height: calc(100vh - 65px);
+    }
+}
