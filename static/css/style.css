@@ -42,6 +42,50 @@ header img {
     object-fit: cover;
 }
 
+.estado-lotacao {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 13px;
+    border: 2px solid;
+}
+
+.estado-lotacao.vazio {
+    color: #333;
+    border-color: white;
+    background-color: #fff;
+}
+.estado-lotacao.poucos {
+    color: #333;
+    border-color: limegreen;
+    background-color: #dfffdc;
+}
+.estado-lotacao.muitos {
+    color: #333;
+    border-color: gold;
+    background-color: #fff8cc;
+}
+.estado-lotacao.lotado {
+    color: #fff;
+    border-color: red;
+    background-color: #ff4d4d;
+}
+
+.popup-onibus button {
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #8a2be2;
+    color: white;
+    cursor: pointer;
+}
+
+.popup-onibus button:hover {
+    background-color: #6e22b0;
+}
+
 @media (max-width: 600px) {
     header img {
         height: 40px;

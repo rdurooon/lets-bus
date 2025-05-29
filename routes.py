@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 import json
 import os
 
@@ -19,3 +19,22 @@ def main():
 def api_onibus():
     dados = carregar_dados_onibus()
     return jsonify(dados)
+
+@routes.route('/api/votar', methods=['POST'])
+def votar():
+    data = request.json
+    bus_id = data.get('id')
+    voto = data.get('voto')
+
+    if not bus_id or not voto:
+        return jsonify({'erro': 'Dados inválido'}), 400
+    
+    onibus = carregar_dados_onibus()
+    for bus in onibus:
+        if bus['id'] == bus_id:
+            if voto in bus['votos']:
+                bus['votos'][voto] += 1
+                with open(onibus_dados_path, 'w') as f:
+                    json.dump(onibus, f, indent=4)
+                return jsonify({'status': 'Voto computado'})
+    return jsonify({'erro': 'Ônibus não encontrado'}), 404
