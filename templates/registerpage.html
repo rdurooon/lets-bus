@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cadastro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Link para CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/log-reg.css') }}"
+    />
+    <!-- Ícones Boxicons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="cabecalho-formulario">
+        <div class="textos">
+          <div class="texto-registrar">Criar Conta</div>
+        </div>
+      </div>
+        <!-- Nome do estabelecimento -->
+        <div class="campo-entrada">
+          <input type="text" class="campo-input" id="reg-nome" required />
+          <label for="reg-nome" class="rotulo">Nome</label>
+          <i class="bx bx-store icone"></i>
+        </div>
+
+        <!-- Telefone -->
+        <div class="campo-entrada">
+          <input type="text" class="campo-input" id="reg-tel" required />
+          <label for="reg-tel" class="rotulo">Telefone</label>
+          <i class="bx bx-phone icone"></i>
+        </div>
+
+        <!-- E-mail -->
+        <div class="campo-entrada">
+          <input type="text" class="campo-input" id="reg-email" required />
+          <label for="reg-email" class="rotulo">E-mail</label>
+          <i class="bx bx-envelope icone"></i>
+        </div>
+
+        <!-- Senha -->
+        <div class="campo-entrada">
+          <input type="password" class="campo-input" id="reg-senha" required />
+          <label for="reg-senha" class="rotulo">Senha</label>
+          <i class="bx bx-lock-alt icone"></i>
+        </div>
+
+        <!-- Botão de cadastro -->
+        <div class="campo-entrada">
+          <button
+            onclick="location.href='/login'"
+            class="botao-entrar"
+            id="btnsignUp"
+          >
+            Cadastrar
+          </button>
+        </div>
+
+        <!-- Termos e condições -->
+        <div class="colunas-formulario">
+          <div class="coluna-1">
+            <input type="checkbox" id="agree" />
+            <label for="agree">Concordo com os termos e condições</label>
+          </div>
+          <div class="coluna-2"></div>
+        </div>
+
+        <!-- Alternar para login -->
+        <div class="alternar-formulario">
+          <span>Já tem uma conta? <a href="/login">Entrar</a></span>
+        </div>
+      </form>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+  </body>
+</html>

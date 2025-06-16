@@ -38,3 +38,12 @@ def votar():
                     json.dump(onibus, f, indent=4)
                 return jsonify({'status': 'Voto computado'})
     return jsonify({'erro': 'Ônibus não encontrado'}), 404
+
+@routes.route('/login')
+def login():
+    return render_template("loginpage.html")
+
+
+@routes.route('/cadastro')
+def cadastro():
+    return render_template("registerpage.html")

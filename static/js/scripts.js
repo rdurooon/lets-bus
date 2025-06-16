@@ -168,3 +168,22 @@ async function enviarVoto(id, voto) {
 
 atualizarBusao();
 setInterval(atualizarBusao, 5000);
+
+
+
+ // Toggle menu mobile
+      const toggle = document.getElementById('nav-toggle');
+      const menu = document.getElementById('nav-menu');
+      const burguer = document.querySelector('.nav-burguer');
+      const close = document.querySelector('.nav-close');
+
+      toggle.addEventListener('click', () => {
+        menu.classList.toggle('menu-aberto');
+        const aberto = menu.classList.contains('menu-aberto');
+        burguer.style.opacity = aberto ? 0 : 1;
+        close.style.opacity = aberto ? 1 : 0;
+      });
+
+    //   MASCARA DE TELEFONE
+    $('#reg-tel').mask('(00) 0000-0000');
+

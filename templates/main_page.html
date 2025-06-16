@@ -1,19 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="http://unpkg.com/leaflet/dist/leaflet.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LetsBus</title>
-</head>
-<body>
-    <header>
-        <img src="{{url_for('static', filename='img/lets-bus_logo.png')}}" alt="Logo LetsBus">
+
+    <!-- Estilo Leaflet -->
+    <link rel="stylesheet" href="http://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Estilo customizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
+  </head>
+  <body>
+    <!-- Menu fixo -->
+    <header class="header">
+      <nav class="nav-container">
+        <div class="nav-logo">
+          <img src="{{ url_for('static', filename='img/lets-bus_logo.png') }}" alt="Logo LetsBus" />
+        </div>
+
+        <div class="nav-toggle" id="nav-toggle">
+          <i class="ri-menu-line nav-burguer"></i>
+          <i class="ri-close-line nav-close"></i>
+        </div>
+
+        <div class="nav-menu" id="nav-menu">
+          <form class="nav-search">
+            <input type="text" placeholder="Buscar ônibus..." />
+            <button type="submit"><i class="ri-search-line"></i></button>
+          </form>
+          <ul class="nav-links">
+            <li><a href="/login" class="nav-link">Entrar</a></li>
+            <li><a href="/cadastro" class="nav-link">Cadastrar</a></li>
+          </ul>
+        </div>
+      </nav>
     </header>
+
+    <!-- Mapa sempre visível -->
     <div id="map"></div>
 
+    <!-- Scripts -->
     <script src="http://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="{{url_for('static', filename='js/scripts.js')}}"></script>
-</body>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+  </body>
 </html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Link CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/log-reg.css') }}"
+    />
+    <!-- Ícones Box -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="cabecalho-formulario">
+        <div class="textos">
+          <div class="texto-login">Login</div>
+        </div>
+      </div>
+
+      <!-- Formulário de Login -->
+      <form action="#" class="formulario-login" autocomplete="off">
+        <div class="campo-entrada">
+          <input type="text" class="campo-input" id="email" required />
+          <label for="email" class="rotulo">Email</label>
+          <i class="bx bx-envelope icone"></i>
+        </div>
+
+        <div class="campo-entrada">
+          <input type="password" class="campo-input" id="senha" required />
+          <label for="senha" class="rotulo">Senha</label>
+          <i class="bx bx-lock-alt icone"></i>
+        </div>
+
+        <div class="campo-entrada">
+          <button onclick="location.href='/'" class="botao-entrar" id="btnEntrar">
+            Entrar <i class="bx bx-log-in"></i>
+          </button>
+        </div>
+
+        <div class="colunas-formulario">
+          <div class="coluna-1"></div>
+          <div class="coluna-2">
+            <a href="#">Esqueci minha senha</a>
+          </div>
+        </div>
+
+        <div class="alternar-formulario">
+          <span>Não tem uma conta? <a href="/cadastro">Cadastre-se</a></span>
+        </div>
+      </form>
+    </div>
+    <script src="js/scripts.js"></script>
+  </body>
+</html>
