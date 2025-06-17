@@ -25,7 +25,7 @@
         "votos": {
             "vazio": 0,
             "poucos": 0,
-            "muitos": 0,
+            "muitos": 2,
             "lotado": 0
         }
     }

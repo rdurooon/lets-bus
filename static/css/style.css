@@ -14,6 +14,25 @@
   --z-fixado: 100;
 }
 
+/* BUSÃO */
+.icone-onibus {
+  width: 40px;
+  height: 40px;
+  border: 3px solid;
+  border-radius: 50%; /* deixa redondo */
+  overflow: hidden;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icone-onibus img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* preenche sem distorcer */
+}
+
 /* RESET */
 * {
   margin: 0;
