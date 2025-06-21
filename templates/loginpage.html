@@ -24,9 +24,9 @@
       </div>
 
       <!-- Formulário de Login -->
-      <form action="#" class="formulario-login" autocomplete="off">
+      <form id="formLogin" class="formulario-login" autocomplete="off">
         <div class="campo-entrada">
-          <input type="text" class="campo-input" id="email" required />
+          <input type="email" class="campo-input" id="email" required />
           <label for="email" class="rotulo">Email</label>
           <i class="bx bx-envelope icone"></i>
         </div>
@@ -37,8 +37,9 @@
           <i class="bx bx-lock-alt icone"></i>
         </div>
 
+        <!-- Botão corrigido -->
         <div class="campo-entrada">
-          <button onclick="location.href='/'" class="botao-entrar" id="btnEntrar">
+          <button type="submit" class="botao-entrar" id="btnEntrar">
             Entrar <i class="bx bx-log-in"></i>
           </button>
         </div>
@@ -46,7 +47,7 @@
         <div class="colunas-formulario">
           <div class="coluna-1"></div>
           <div class="coluna-2">
-            <a href="#">Esqueci minha senha</a>
+            <a href="/recuperar">Esqueci minha senha</a>
           </div>
         </div>
 
@@ -55,6 +56,6 @@
         </div>
       </form>
     </div>
-    <script src="js/scripts.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
   </body>
 </html>

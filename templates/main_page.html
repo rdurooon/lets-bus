@@ -30,9 +30,15 @@
             <input type="text" placeholder="Buscar ônibus..." />
             <button type="submit"><i class="ri-search-line"></i></button>
           </form>
+
           <ul class="nav-links">
-            <li><a href="/login" class="nav-link">Entrar</a></li>
-            <li><a href="/cadastro" class="nav-link">Cadastrar</a></li>
+            {% if usuario %}
+              <li><span class="nav-link">Bem-vindo, {{ usuario.nome }}!</span></li>
+              <li><a href="/logout" class="nav-link">Sair</a></li>
+            {% else %}
+              <li><a href="/login" class="nav-link">Entrar</a></li>
+              <li><a href="/cadastro" class="nav-link">Cadastrar</a></li>
+            {% endif %}
           </ul>
         </div>
       </nav>

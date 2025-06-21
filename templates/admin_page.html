@@ -1,0 +1,55 @@
+<!-- admin_page.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel do Administrador</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+
+  <h1 class="admin-titulo">Painel Administrativo</h1>
+
+  <div class="admin-secao">
+    <h2>1. Cadastrar Novo Ônibus</h2>
+    <label for="id-onibus">ID do ônibus</label>
+    <input type="text" id="id-onibus" class="admin-input" placeholder="Ex: 1002" />
+
+    <label for="lat">Latitude</label>
+    <input type="text" id="lat" class="admin-input" placeholder="Ex: -0.025000" />
+
+    <label for="lng">Longitude</label>
+    <input type="text" id="lng" class="admin-input" placeholder="Ex: -51.170000" />
+
+    <label for="rota">Nome da Rota</label>
+    <input type="text" id="rota" class="admin-input" placeholder="Ex: Novo Horizonte" />
+
+    <label for="cor">Cor da Rota</label>
+    <input type="text" id="cor" class="admin-input" placeholder="Ex: blue" />
+
+    <button class="admin-botao" onclick="cadastrarOnibus()">Cadastrar Ônibus</button>
+  </div>
+
+  <div class="admin-secao">
+    <h2>2. Atualizar Rota de um Ônibus</h2>
+    <label for="bus-id-atualizar">ID do ônibus</label>
+    <input type="text" id="bus-id-atualizar" class="admin-input" />
+
+    <label for="nova-rota">Nova Rota</label>
+    <input type="text" id="nova-rota" class="admin-input" />
+
+    <button class="admin-botao" onclick="atualizarRota()">Atualizar Rota</button>
+  </div>
+
+  <div class="admin-secao">
+    <h2>3. Remover Parada</h2>
+    <label for="parada-id">ID da parada</label>
+    <input type="text" id="parada-id" class="admin-input" />
+
+    <button class="admin-botao" onclick="removerParada()">Remover Parada</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

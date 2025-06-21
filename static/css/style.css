@@ -193,3 +193,32 @@ body {
     width: 100%;
   }
 }
+
+/* CAIXA DE VOTO */
+.popup-onibus {
+    background-color: #f9f9f9; /* Cor de fundo */
+    border: 2px solid #8a2be2; /* Cor da borda */
+    border-radius: 8px; /* Bordas arredondadas */
+    padding: 15px; /* Espaçamento interno */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+    text-align: center; /* Centraliza o texto */
+}
+
+.popup-onibus h4 {
+    margin-bottom: 10px; /* Espaçamento abaixo do título */
+    color: #333; /* Cor do texto */
+}
+
+.popup-onibus button {
+    background-color: #8a2be2; /* Cor do botão */
+    color: white; /* Cor do texto do botão */
+    border: none; /* Remove a borda padrão */
+    border-radius: 5px; /* Bordas arredondadas do botão */
+    padding: 10px 15px; /* Espaçamento interno do botão */
+    cursor: pointer; /* Muda o cursor para indicar que é clicável */
+    transition: background-color 0.3s; /* Transição suave para a cor de fundo */
+}
+
+.popup-onibus button:hover {
+    background-color: #7a1e9c; /* Cor do botão ao passar o mouse */
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "nome": "Leandro Marques",
+    "telefone": "(91) 9866-4242",
+    "email": "duartemarques66@gmail.com",
+    "senha": "scrypt:32768:8:1$q9p1CIdTAYBfkc3D$1da6bc69f42476c173096aa0d27b88a759b1dbb328ea535ee0cea475872940bfac8e1bfd9c884319ae45b9ffae517091fde60f1d8c1fed32c43fbb5a3d91d4c2",
+    "admin": true
+  }
+]

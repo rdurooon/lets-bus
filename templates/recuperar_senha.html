@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recuperar Senha</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/log-reg.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <div class="cabecalho-formulario">
+      <div class="textos">
+        <div class="texto-login">Recuperar Senha</div>
+      </div>
+    </div>
+
+    <!-- Mensagem explicativa -->
+    <p style="text-align: center; padding: 0 20px 10px; font-size: 14px; color: #555;">
+      Digite seu e-mail cadastrado abaixo. Você será redirecionado para redefinir sua senha.
+    </p>
+
+    <form method="POST" class="formulario-login">
+      <div class="campo-entrada">
+        <input type="email" class="campo-input" name="email" required />
+        <label for="email" class="rotulo">Seu e-mail cadastrado</label>
+      </div>
+
+      <div class="campo-entrada">
+        <button type="submit" class="botao-entrar">Continuar</button>
+      </div>
+
+      {% if mensagem %}
+        <div class="mensagem-recuperacao" style="text-align: center; margin-top: 10px; color: #008000;">
+          {{ mensagem|safe }}
+        </div>
+      {% endif %}
+    </form>
+  </div>
+</body>
+</html>

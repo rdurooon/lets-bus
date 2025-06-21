@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Nova Senha</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/log-reg.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="cabecalho-formulario">
+        <div class="textos">
+          <div class="texto-login">Redefinir Senha</div>
+        </div>
+      </div>
+
+      <form method="POST" class="formulario-login">
+        <div class="campo-entrada">
+          <input
+            type="password"
+            class="campo-input"
+            name="nova_senha"
+            required
+          />
+          <label class="rotulo">Nova senha</label>
+        </div>
+
+        <div class="campo-entrada">
+          <input type="password" class="campo-input" name="confirmar_senha" required/>
+          <label class="rotulo">Confirmar nova senha</label>
+        </div>
+
+        <div class="campo-entrada">
+          <button type="submit" class="botao-entrar">Salvar nova senha</button>
+        </div>
+
+        {% if mensagem %}
+        <div class="mensagem-recuperacao">{{ mensagem }}</div>
+        {% endif %}
+      </form>
+    </div>
+  </body>
+</html>

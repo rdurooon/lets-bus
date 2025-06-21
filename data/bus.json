@@ -8,8 +8,8 @@
             "cor": "red"
         },
         "votos": {
-            "vazio": 0,
-            "poucos": 0,
+            "vazio": 5,
+            "poucos": 7,
             "muitos": 0,
             "lotado": 0
         }
