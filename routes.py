@@ -283,6 +283,53 @@ def update_bus():
 
     return jsonify({'erro': 'Ônibus não encontrado'}), 404
 
+@routes.route('/api/update_location', methods=['POST'])
+def update_location():
+    dados = request.get_json()
+    bus_id = dados.get('id')
+    lat = dados.get('lat')
+    lng = dados.get('lng')
+
+    if not bus_id or lat is None or lng is None:
+        return jsonify({'erro':'Dados imcompletos'}), 400
+    
+    onibus = carregar_dados_onibus()
+    for bus in onibus:
+        if bus['id'] == bus_id:
+            bus['lat'] = lat
+            bus['lng'] = lng
+            with open(onibus_dados_path, 'w') as f:
+                json.dump(onibus, f, indent=4)
+            return jsonify({'status':'Localização atualizada com sucesso'})
+    return jsonify({'erro':'Onibus não encontrado'}),404
+
+@routes.route('/api/update_location_url', methods=['GET'])
+def update_location_url():
+    bus_id = request.args.get('id')
+    lat = request.args.get('lat')
+    lng = request.args.get('lng')
+
+    if not bus_id or lat is None or lng is None:
+        return jsonify({'erro': 'Parâmetros ausentes ou inválidos'}), 400
+
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except ValueError:
+        return jsonify({'erro': 'Latitude ou longitude inválidas'}), 400
+
+    onibus = carregar_dados_onibus()
+    for bus in onibus:
+        if bus['id'] == bus_id:
+            bus['lat'] = lat
+            bus['lng'] = lng
+            with open(onibus_dados_path, 'w') as f:
+                json.dump(onibus, f, indent=4)
+            return jsonify({'status': 'Localização atualizada com sucesso'})
+
+    return jsonify({'erro': 'Ônibus não encontrado'}), 404
+
+
 # ----------- ROTA PAINEL ADMIN -----------
 
 @routes.route('/admin')

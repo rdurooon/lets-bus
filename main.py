@@ -7,4 +7,3 @@ app.secret_key = 'uma_chave_bem_secreta'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    
