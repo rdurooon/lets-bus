@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request, url_for, redirect, session
+from flask import Blueprint, render_template, jsonify, request, send_from_directory, url_for, redirect, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
@@ -13,7 +13,6 @@ tokens_path = os.path.join('data', 'tokens_recuperacao.json')
 paradas_path = os.path.join('data', 'paradas.json')
 
 # ----------- FUNÇÕES AUXILIARES -----------
-
 def carregar_usuarios():
     if os.path.exists(usuarios_path):
         with open(usuarios_path, 'r') as f:
@@ -294,6 +293,7 @@ def update_location():
         bus_id = data.get('id')
         lat = data.get('lat')
         lng = data.get('lng')
+    print(f"Recebido: id={bus_id}, lat={lat}, lng={lng}")
 
     if not bus_id or lat is None or lng is None:
         return jsonify({'erro':'Dados imcompletos'}), 400
