@@ -305,6 +305,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ------------------ MÁSCARA DE TELEFONE ------------------
   if (window.jQuery && $('#reg-tel').length) {
-    $('#reg-tel').mask('(00) 0000-0000');
+    $('#reg-tel').mask('(00) 00000-0000');
   }
 });
+
+// ------------------ MENU HAMBURGER ------------------
+const navToggle = document.getElementById("nav-toggle");
+const navMenu = document.getElementById("nav-menu");
+const iconMenu = document.querySelector(".nav-burguer");
+const iconClose = document.querySelector(".nav-close");
+
+if (navToggle && navMenu) {
+  navToggle.addEventListener("click", () => {
+    const menuAberto = navMenu.classList.toggle("menu-aberto");
+
+    if (menuAberto) {
+      iconMenu.style.opacity = 0;
+      iconClose.style.opacity = 1;
+    } else {
+      iconMenu.style.opacity = 1;
+      iconClose.style.opacity = 0;
+    }
+  });
+}

@@ -5,5 +5,14 @@
     "email": "duartemarques66@gmail.com",
     "senha": "scrypt:32768:8:1$q9p1CIdTAYBfkc3D$1da6bc69f42476c173096aa0d27b88a759b1dbb328ea535ee0cea475872940bfac8e1bfd9c884319ae45b9ffae517091fde60f1d8c1fed32c43fbb5a3d91d4c2",
     "admin": true
+  },
+  {
+    "nome": "Ruan",
+    "telefone": "(96) 99183-7946",
+    "email": "rdurao2005@gmail.com",
+    "senha": "scrypt:32768:8:1$D9G16jeUGoweM3B2$33b5bea4ab8b968f2a5f7db21f21f124f3960c682550f4b8c6be1e2d29a418362422c7271856f25298d83eafbda2e74338fccb165490c9c61e26469c95052fe8",
+    "favoritos": [],
+    "paradas_cadastradas": [],
+    "admin": false
   }
 ]

@@ -283,12 +283,17 @@ def update_bus():
 
     return jsonify({'erro': 'Ônibus não encontrado'}), 404
 
-@routes.route('/api/update_location', methods=['POST'])
+@routes.route('/api/update_location', methods=['POST','GET'])
 def update_location():
-    dados = request.get_json()
-    bus_id = dados.get('id')
-    lat = dados.get('lat')
-    lng = dados.get('lng')
+    if request.method == 'GET':
+        bus_id = request.args.get('id')
+        lat = request.args.get('lat')
+        lng = request.args.get('lng')
+    else:
+        data = request.get_json()
+        bus_id = data.get('id')
+        lat = data.get('lat')
+        lng = data.get('lng')
 
     if not bus_id or lat is None or lng is None:
         return jsonify({'erro':'Dados imcompletos'}), 400
