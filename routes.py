@@ -12,6 +12,13 @@ onibus_dados_path = os.path.join('data', 'bus.json')
 tokens_path = os.path.join('data', 'tokens_recuperacao.json')
 paradas_path = os.path.join('data', 'paradas.json')
 
+# ---------------- RE-ROTAS ----------------
+@routes.before_request
+def redirect_to_https():
+    if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+
 # ----------- FUNÇÕES AUXILIARES -----------
 def carregar_usuarios():
     if os.path.exists(usuarios_path):
