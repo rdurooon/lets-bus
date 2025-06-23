@@ -1,20 +1,91 @@
+let map;
+
 document.addEventListener("DOMContentLoaded", () => {
-  // ------------------ MAPA ------------------
   const mapElement = document.getElementById("map");
 
   if (mapElement) {
-    const map = L.map("map");
-    const marcadores = {};
-    let marcadorUser  = null;
+    map = L.map("map");
 
-    const estados = {
-      'vazio': { cor: 'white', label: 'Vazio' },
-      'poucos': { cor: 'limegreen', label: 'Poucos Passageiros' },
-      'muitos': { cor: 'gold', label: 'Muitos Passageiros' },
-      'lotado': { cor: 'red', label: 'Lotado' }
+    let rotaAtivaPolyline = null;
+
+    function desenharRota(coords, cor) {
+      if (rotaAtivaPolyline) {
+        rotaAtivaPolyline.remove();
+      }
+      rotaAtivaPolyline = L.polyline(coords, { color: cor, weight: 5, opacity: 0.7 }).addTo(map);
+    }
+
+    const tileLayerLight = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "LetsBus",
+    });
+
+    const tileLayerDark = L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+    });
+
+    tileLayerLight.addTo(map);
+
+    // Controle de troca de tema (claro/escuro)
+    const toggleButton = L.control({ position: 'topright' });
+    toggleButton.onAdd = function () {
+      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+      div.style.backgroundColor = 'white';
+      div.style.padding = '5px';
+      div.style.cursor = 'pointer';
+      div.style.fontSize = '14px';
+      div.style.fontWeight = 'bold';
+      div.style.textAlign = 'center';
+      div.title = "Alternar modo claro/escuro";
+      div.innerHTML = '🌙';
+
+      div.onclick = function () {
+        if (map.hasLayer(tileLayerLight)) {
+          map.removeLayer(tileLayerLight);
+          tileLayerDark.addTo(map);
+          div.innerHTML = '☀️';
+        } else {
+          map.removeLayer(tileLayerDark);
+          tileLayerLight.addTo(map);
+          div.innerHTML = '🌙';
+        }
+      };
+      return div;
     };
+    toggleButton.addTo(map);
+
+    const marcadores = {};
+    let marcadorUser = null;
+
+    let marcadorSelecionadoId = null;
+
+    function limparSelecaoOnibus() {
+      marcadorSelecionadoId = null;
+      if (rotaAtivaPolyline) {
+        rotaAtivaPolyline.remove();
+        rotaAtivaPolyline = null;
+      }
+    }
+
+    function limparSelecaoOnibus() {
+      marcadorSelecionadoId = null;
+      if (rotaAtivaPolyline) {
+        rotaAtivaPolyline.remove();
+        rotaAtivaPolyline = null;
+      }
+    }
+
+    map.on('click', () => {
+      limparSelecaoOnibus();
+    });
 
     function estadoMaisVotado(votos) {
+      const estados = {
+        'vazio': { cor: 'white', label: 'Vazio' },
+        'poucos': { cor: 'limegreen', label: 'Poucos Passageiros' },
+        'muitos': { cor: 'gold', label: 'Muitos Passageiros' },
+        'lotado': { cor: 'red', label: 'Lotado' }
+      };
+
       let max = 0, estado = 'vazio';
       for (let [k, v] of Object.entries(votos)) {
         if (v > max) {
@@ -30,48 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return L.divIcon({ html, className: "", iconSize: [50, 50], iconAnchor: [24, 25] });
     }
 
-    function mostrarLocalizacaoUser (lat, lng) {
-      const html = `
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <div style="background-color: #8a2be2; color: white; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 2px;">VOCÊ</div>
-          <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #8a2be2;"></div>
-        </div>
-      `;
-
-      if (marcadorUser ) {
-        marcadorUser .setLatLng([lat, lng]);
-      } else {
-        marcadorUser  = L.marker([lat, lng], {
-          icon: L.divIcon({ className: '', html: html, iconSize: [30, 30], iconAnchor: [15, 15] })
-        }).addTo(map);
-
-        // Clique no marcador VOCÊ abre opções
-        marcadorUser .on('click', () => {
-          const popup = `
-            <div style="text-align: center;">
-              <h4>Você está aqui</h4>
-              <button onclick="abrirFormularioParada(${lat}, ${lng})">Cadastrar Parada</button><br><br>
-              <button onclick="mostrarFavoritas()">Ver Favoritas</button>
-            </div>
-          `;
-          L.popup().setLatLng([lat, lng]).setContent(popup).openOn(map);
-        });
-      }
-    }
-
-    if ("geolocation" in navigator) {
-      navigator.geolocation.watchPosition(
-        pos => {
-          const { latitude, longitude } = pos.coords;
-          mostrarLocalizacaoUser (latitude, longitude);
-        },
-        err => {
-          console.warn("Erro ao obter localização do usuário: ", err.message);
-        },
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-      );
-    }
-
     async function atualizarBusao() {
       const res = await fetch("/api/onibus");
       const dados = await res.json();
@@ -79,9 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!map._loaded) {
         navigator.geolocation.getCurrentPosition(
           pos => {
-            const { latitude, longitude } = pos.coords;
-            map.setView([latitude, longitude], 15);
-            mostrarLocalizacaoUser (latitude, longitude);
+            map.setView([pos.coords.latitude, pos.coords.longitude], 15);
           },
           err => {
             if (dados.length > 0) {
@@ -97,63 +124,52 @@ document.addEventListener("DOMContentLoaded", () => {
       dados.forEach((bus) => {
         const { id, lat, lng, rota, votos } = bus;
         const estado = estadoMaisVotado(votos || { vazio: 0, poucos: 0, muitos: 0, lotado: 0 });
-        const estadoChave = Object.entries(estados).find(([key, val]) => val.label === estado.label)?.[0] || 'vazio';
+        const estadoChave = Object.entries({
+          'vazio': { cor: 'white', label: 'Vazio' },
+          'poucos': { cor: 'limegreen', label: 'Poucos Passageiros' },
+          'muitos': { cor: 'gold', label: 'Muitos Passageiros' },
+          'lotado': { cor: 'red', label: 'Lotado' }
+        }).find(([key, val]) => val.label === estado.label)?.[0] || 'vazio';
 
         const popup = `
           <div>
             <strong>Ônibus #${id}</strong><br>
-            Rota: ${rota.nome}<br>
+            Rota: ${decodeUtf8(rota.nome)}<br>
             Lotação: <span class="estado-lotacao ${estadoChave}">${estado.label}</span><br><br>
-            <button class="popup-onibus" onclick="recentralizarMapa(${lat}, ${lng}); abrirVotacao('${id}', ${lat}, ${lng})">Votar na Lotação</button>
+            <div class="popup-onibus-voto">
+              <button class="botao-votar-lotacao" onclick="recentralizarMapa(${lat}, ${lng}); abrirVotacao('${id}', ${lat}, ${lng})">Votar na Lotação</button>
+            </div>
           </div>
         `;
 
         if (marcadores[id]) {
+          // Atualiza posição e popup
           marcadores[id].setLatLng([lat, lng]);
           marcadores[id].getPopup().setContent(popup);
         } else {
-          marcadores[id] = L.marker([lat, lng], {
-            icon: iconeOnibus(rota.cor),
-          }).bindPopup(popup).addTo(map);
+          const marcador = L.marker([lat, lng], { icon: iconeOnibus(rota.cor) });
+          marcador.bindPopup(popup).addTo(map);
+          marcador.on('click', () => {
+            marcadorSelecionadoId = id;
+            map.setView(marcador.getLatLng(), 15, { animate: true });
+            marcador.openPopup();
+            if (rota.coords && rota.coords.length > 0) {
+              desenharRota(rota.coords, rota.cor);
+            }
+          });
+          marcadores[id] = marcador;
         }
       });
     }
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "LetsBus",
-    }).addTo(map);
-
-    window.abrirVotacao = function (id, lat, lng) {
-      const popup = `
-        <div class="popup-onibus" style="text-align:center;">
-          <h4 style="margin-bottom: 10px;">Como está a lotação do ônibus</h4>
-          <div style="display: flex; flex-direction: column; gap: 5px">
-            <button onclick="enviarVoto('${id}', 'vazio')">Vazio</button>
-            <button onclick="enviarVoto('${id}', 'poucos')">Poucos passageiros</button>
-            <button onclick="enviarVoto('${id}', 'muitos')">Muitos passageiros</button>
-            <button onclick="enviarVoto('${id}', 'lotado')">Lotado</button>
-          </div>
-        </div>
-      `;
-      L.popup().setLatLng([lat, lng]).setContent(popup).openOn(map);
-    }
-
-    window.recentralizarMapa = function(lat, lng) {
-      map.setView([lat, lng], 15); // Recentraliza o mapa no ônibus
-    }
-
-    window.enviarVoto = async function (id, voto) {
-      const res = await fetch('/api/votar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, voto })
-      });
-      const resposta = await res.json();
-      alert(resposta.status || resposta.erro);
-    }
-
     atualizarBusao();
     setInterval(atualizarBusao, 5000);
+
+    function recentralizarMapa(lat, lng) {
+      if (typeof map !== "undefined") {
+        map.setView([lat, lng], 18, { animate: true });
+      }
+    }
 
     // ------------------ PARADAS ------------------
     async function carregarParadasNoMapa() {
@@ -210,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.mostrarFavoritas = async function() {
     try {
       // Pega o email do usuário via template Jinja
-      const email = "{{ usuario.email }}";
+      const email = document.body.dataset.email;
 
       if (!email) {
         alert("Você precisa estar logado para ver as paradas favoritas.");
@@ -262,8 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dados = await resposta.json();
 
       if (dados.status === "sucesso") {
-        alert("Login realizado com sucesso!");
-        window.location.href = "/";
+        abrirPopupLoginSucesso();
       } else {
         alert(dados.mensagem || "Erro no login");
       }
@@ -271,6 +286,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------ CADASTRO ------------------
+  function abrirPopupCadastroSucesso(nomeUsuario) {
+  const fundo = document.getElementById('popup-fundo-cadastro');
+  const popup = document.getElementById('popup-sucesso-cadastro');
+  const nomeSpan = document.getElementById('nome-usuario-popup');
+
+  nomeSpan.textContent = nomeUsuario;
+
+  fundo.style.display = 'flex';
+
+  popup.style.animation = 'none';
+  popup.offsetHeight;
+  popup.style.animation = null;
+  }
+
   const formCadastro = document.getElementById("formCadastro");
   if (formCadastro) {
     formCadastro.addEventListener("submit", async (e) => {
@@ -295,8 +324,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const dados = await resposta.json();
 
       if (dados.status === "sucesso") {
-        alert("Cadastro realizado!");
-        window.location.href = "/login";
+        const loginRes = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const loginDados = await loginRes.json();
+
+        if (loginDados.status === "sucesso") {
+          abrirPopupCadastroSucesso(nome);
+        } else {
+          alert("Cadastro realizado, mas falha no login automático. Faça login manualmente.");
+          window.location.href = "/login";
+        }
       } else {
         alert(dados.mensagem || "Erro ao cadastrar");
       }
@@ -308,6 +349,14 @@ document.addEventListener("DOMContentLoaded", () => {
     $('#reg-tel').mask('(00) 00000-0000');
   }
 });
+
+function decodeUtf8(str) {
+  try {
+    return decodeURIComponent(escape(str));
+  } catch {
+    return str; // se der erro, retorna original
+  }
+}
 
 // ------------------ MENU HAMBURGER ------------------
 const navToggle = document.getElementById("nav-toggle");
@@ -327,4 +376,42 @@ if (navToggle && navMenu) {
       iconClose.style.opacity = 0;
     }
   });
+}
+
+// ---- POPUP DE VOTO CONFIRMADO -----
+function abrirPopupConfirmacao() {
+  const fundo = document.getElementById('popup-fundo');
+  const popup = document.getElementById('popup-confirmacao');
+
+  fundo.style.display = 'flex';
+
+  popup.style.animation = 'none';
+  popup.offsetHeight;
+  popup.style.animation = null;
+}
+
+function fecharPopupConfirmacao() {
+  const fundo = document.getElementById('popup-fundo');
+  fundo.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnFechar = document.getElementById('popup-fechar');
+  btnFechar.addEventListener('click', fecharPopupConfirmacao);
+});
+
+// ---- POPUP DE LOGIN -----
+function abrirPopupLoginSucesso() {
+  const fundo = document.getElementById('popup-fundo-login');
+  const popup = document.getElementById('popup-sucesso-login');
+
+  fundo.style.display = 'flex';
+
+  popup.style.animation = 'none';
+  popup.offsetHeight;
+  popup.style.animation = null;
+}
+
+function irParaMapa() {
+  window.location.href = "/";
 }

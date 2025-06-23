@@ -1,32 +1,36 @@
 [
-    {
-        "id": "1000",
-        "lat": "-0.020743",
-        "lng": "-51.180054",
-        "rota": {
-            "nome": "Cora\u00c3\u00a7\u00c3\u00a3o",
-            "cor": "red"
-        },
-        "votos": {
-            "vazio": 5,
-            "poucos": 7,
-            "muitos": 0,
-            "lotado": 0
-        }
+  {
+    "id": "1000",
+    "lat": "-0.020743",
+    "lng": "-51.180054",
+    "rota": {
+      "nome": "Coração",
+      "cor": "red",
+      "coords": []
     },
-    {
-        "id": "1001",
-        "lat": -0.038906,
-        "lng": -51.178646,
-        "rota": {
-            "nome": "Fazendinha",
-            "cor": "green"
-        },
-        "votos": {
-            "vazio": 0,
-            "poucos": 0,
-            "muitos": 2,
-            "lotado": 0
-        }
+    "votos": {
+      "vazio": 0,
+      "poucos": 0,
+      "muitos": 0,
+      "lotado": 0
     }
+  },
+  {
+    "id": "1001",
+    "lat": -0.038906,
+    "lng": -51.178646,
+    "rota": {
+      "nome": "Fazendinha",
+      "cor": "green",
+      "coords": [
+        
+      ]
+    },
+    "votos": {
+      "vazio": 0,
+      "poucos": 0,
+      "muitos": 0,
+      "lotado": 0
+    }
+  }
 ]

@@ -33,14 +33,16 @@
   </div>
 
   <div class="admin-secao">
-    <h2>2. Atualizar Rota de um Ônibus</h2>
-    <label for="bus-id-atualizar">ID do ônibus</label>
-    <input type="text" id="bus-id-atualizar" class="admin-input" />
-
-    <label for="nova-rota">Nova Rota</label>
-    <input type="text" id="nova-rota" class="admin-input" />
-
-    <button class="admin-botao" onclick="atualizarRota()">Atualizar Rota</button>
+    <h2>2. Upload de arquivo XLS com nomes das ruas para rotas</h2>
+    <div class="upload-container">
+      <label for="upload-xls" class="upload-label">📄 Escolher Arquivo XLS</label>
+      <input type="file" id="upload-xls" accept=".xls,.xlsx" />
+      <span id="upload-nome-arquivo" class="upload-nome">Nenhum arquivo selecionado</span>
+    </div>
+    <label for="upload-xls-rota-id">ID do ônibus para atualizar a rota</label>
+    <input type="text" id="upload-xls-rota-id" placeholder="Ex: 1002" class="admin-input" />
+    <button id="btn-enviar-xls" class="admin-botao">Enviar XLS e Atualizar Rota</button>
+    <div id="upload-feedback" style="margin-top: 10px; font-weight: bold;"></div>
   </div>
 
   <div class="admin-secao">
@@ -50,7 +52,19 @@
 
     <button class="admin-botao" onclick="removerParada()">Remover Parada</button>
   </div>
+  <div id="modal-loading" class="modal-loading" style="display:none;">
+    <div class="modal-content-loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px;">Enviando arquivo e atualizando rota...</p>
+    </div>
+  </div>
 
+  <div id="modal-feedback" class="modal-feedback" style="display:none;">
+    <div class="modal-feedback-content">
+    <span id="modal-feedback-close" class="modal-feedback-close">&times;</span>
+    <pre id="modal-feedback-text" style="white-space: pre-wrap; font-family: monospace;"></pre>
+    </div>
+  </div>
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

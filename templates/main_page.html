@@ -47,6 +47,13 @@
     <!-- Mapa sempre visível -->
     <div id="map"></div>
 
+    <!-- Popup escondido -->
+    <div id="popup-fundo" style="display:none;">
+      <div id="popup-confirmacao">
+        <div>Voto computado!</div>
+        <button id="popup-fechar">Voltar</button>
+      </div>
+    </div>
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>

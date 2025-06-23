@@ -1,9 +1,14 @@
+from functools import wraps
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, url_for, redirect, session
+import pandas as pd
+import requests
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
 import hashlib
 import time
+import traceback
+import math
 
 routes = Blueprint('routes', __name__)
 
@@ -33,9 +38,20 @@ def salvar_usuarios(lista_usuarios):
     with open(usuarios_path, 'w') as f:
         json.dump(lista_usuarios, f, indent=2)
 
+def salvar_dados_onibus(dados):
+    for bus in dados:
+        rota = bus.get('rota', {})
+        coords = rota.get('coords')
+        if isinstance(coords, list):
+            coords = arredondar_coordenadas(coords)
+            coords = simplificar_rota(coords, tolerancia=0.0005)
+            rota['coords'] = coords
+    with open(onibus_dados_path, 'w', encoding='utf-8') as f:
+        json.dump(dados, f, ensure_ascii=False, indent=2)
+
 def carregar_dados_onibus():
     if os.path.exists(onibus_dados_path):
-        with open(onibus_dados_path, 'r') as f:
+        with open(onibus_dados_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     return []
 
@@ -70,6 +86,134 @@ def carregar_paradas():
 def salvar_paradas(lista_paradas):
     with open(paradas_path, 'w') as f:
         json.dump(lista_paradas, f, indent=2)
+
+# ------------- FUNÇÕES SOBRE ROTAS DOS ONIBUS ----------------
+def arredondar_coordenadas(coordenadas):
+    return [[round(lat, 4), round(lon, 4)] for lat, lon in coordenadas]
+
+def simplificar_rota(coordenadas, tolerancia=0.0005):
+    # algoritmo Douglas–Peucker
+    from math import hypot
+    def perp_dist(p, p1, p2):
+        (x, y), (x1,y1), (x2,y2) = p, p1, p2
+        num = abs((y2-y1)*x - (x2-x1)*y + x2*y1 - y2*x1)
+        den = hypot(y2-y1, x2-x1)
+        return num/den if den else hypot(x-x1, y-y1)
+
+    def dp(pts):
+        if len(pts) < 3: return pts
+        maxd, idx = 0, 0
+        for i in range(1, len(pts)-1):
+            d = perp_dist(pts[i], pts[0], pts[-1])
+            if d > maxd:
+                maxd, idx = d, i
+        if maxd > tolerancia:
+            L = dp(pts[:idx+1])
+            R = dp(pts[idx:])
+            return L[:-1] + R
+        else:
+            return [pts[0], pts[-1]]
+    return dp(coordenadas)
+
+def buscar_coordenadas_possiveis(rua, cidade='Santana', estado='Amapá', limite=5):
+    url = 'https://nominatim.openstreetmap.org/search'
+    tentativas = [
+        f'{rua}, {cidade}, {estado}, Brasil',
+        f'{rua}, {estado}, Brasil',
+        f'{rua}'
+    ]
+    headers = {'User-Agent': 'LetsBus'}
+
+    for query in tentativas:
+        try:
+            params = {'q': query, 'format': 'json', 'limit': limite}
+            resposta = requests.get(url, params=params, headers=headers, timeout=5)
+            dados = resposta.json()
+            if dados:
+                resultados = []
+                for d in dados:
+                    lat = float(d['lat'])
+                    lon = float(d['lon'])
+                    resultados.append((lat, lon))
+                return resultados
+        except Exception:
+            continue
+    return []
+
+def distancia_pontos(p1, p2):
+    # distância euclidiana simples (latitude e longitude em graus)
+    return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+
+def escolher_melhor_rota(ruas):
+    # ruas é lista de nomes das ruas
+    # para cada rua pega lista de coordenadas possíveis
+    lista_opcoes = [buscar_coordenadas_possiveis(rua) for rua in ruas]
+
+    # Verifica se alguma rua não tem opções
+    for idx, opcoes in enumerate(lista_opcoes):
+        if not opcoes:
+            return None, f"Não há opções para a rua: {ruas[idx]}"
+
+    rota_final = []
+    # Escolhe arbitrariamente a primeira opção da primeira rua
+    rota_final.append(lista_opcoes[0][0])
+
+    for i in range(1, len(lista_opcoes)):
+        opcoes_proxima_rua = lista_opcoes[i]
+
+        melhor_par = None
+        menor_distancia = float('inf')
+        ponto_atual = rota_final[-1]
+
+        for opc_prox in opcoes_proxima_rua:
+            dist = distancia_pontos(ponto_atual, opc_prox)
+            if dist < menor_distancia:
+                menor_distancia = dist
+                melhor_par = opc_prox
+
+        if melhor_par:
+            rota_final.append(melhor_par)
+        else:
+            # fallback: primeira opção
+            rota_final.append(opcoes_proxima_rua[0])
+
+    return rota_final, None
+
+def buscar_coordenada(rua, cidade='Santana', estado='Amapá'):
+    url = 'https://nominatim.openstreetmap.org/search'
+
+    tentativas = [
+        f'{rua}, {cidade}, {estado}, Brasil',
+        f'{rua}, {estado}, Brasil',
+        f'{rua}'
+    ]
+
+    headers = {'User-Agent': 'LetsBus'}
+
+    for query in tentativas:
+        try:
+            params = {'q': query, 'format': 'json', 'limit': 1}
+            resposta = requests.get(url, params=params, headers=headers, timeout=5)
+            dados = resposta.json()
+            if dados:
+                lat = float(dados[0]['lat'])
+                lon = float(dados[0]['lon'])
+                return lat, lon
+        except Exception:
+            continue
+
+    return None
+
+def obter_rota_osrm(origem, destino):
+    url = f'http://router.project-osrm.org/route/v1/driving/{origem[1]},{origem[0]};{destino[1]},{destino[0]}?overview=full&geometries=geojson'
+    try:
+        r = requests.get(url, timeout=10)
+        data = r.json()
+        if 'routes' in data and data['routes']:
+            return data['routes'][0]['geometry']['coordinates']  # [lng, lat]
+    except Exception as e:
+        print(f"Erro ao buscar rota OSRM: {e}")
+    return None
 
 # ----------- ROTAS DE PÁGINAS -----------
 
@@ -343,25 +487,27 @@ def update_location_url():
 
 
 # ----------- ROTA PAINEL ADMIN -----------
+def admin_required(f):
+    @wraps(f)
+    def decoreted_function(*args, **kwargs):
+        usuario = session.get('usuario')
+        if not usuario or not usuario.get('admin'):
+            return "Acesso não autorizado!", 403
+        return f(*args, **kwargs)
+    return decoreted_function
 
 @routes.route('/admin')
+@admin_required
 def painel_admin():
     usuario = session.get('usuario')
-    if not usuario or not usuario.get('admin'):
-        return "Acesso não autorizado", 403
-
     onibus = carregar_dados_onibus()
     paradas = carregar_paradas()
     usuarios = carregar_usuarios()
-
     return render_template("admin_page.html", usuario=usuario, onibus=onibus, paradas=paradas, usuarios=usuarios)
 
 @routes.route('/api/admin/cadastrar_onibus', methods=['POST'])
+@admin_required
 def cadastrar_onibus():
-    usuario = session.get('usuario')
-    if not usuario or not usuario.get('admin'):
-        return jsonify({'erro': 'Acesso não autorizado'}), 403
-
     dados = request.get_json()
     if not all(k in dados for k in ['id', 'lat', 'lng', 'rota']):
         return jsonify({'erro': 'Dados incompletos'}), 400
@@ -386,10 +532,8 @@ def cadastrar_onibus():
     return jsonify({'status': 'Ônibus cadastrado com sucesso'})
 
 @routes.route('/api/admin/remover_parada', methods=['POST'])
+@admin_required
 def remover_parada():
-    usuario = session.get('usuario')
-    if not usuario or not usuario.get('admin'):
-        return jsonify({'erro': 'Acesso não autorizado'}), 403
 
     dados = request.get_json()
     parada_id = dados.get('parada_id')
@@ -407,3 +551,78 @@ def remover_parada():
     salvar_usuarios(usuarios)
 
     return jsonify({'status': 'Parada removida com sucesso'})
+
+uplod_xls = 'data/rotas'
+os.makedirs(uplod_xls, exist_ok=True)
+
+@routes.route('/api/upload_rota_xls', methods=['POST'])
+def upload_rota_xls():
+    file = request.files.get('file')
+    bus_id = request.form.get('bus_id')
+
+    if not file or not bus_id:
+        return jsonify({'error': 'Arquivo e ID do ônibus são obrigatórios'}), 400
+
+    try:
+        df = pd.read_excel(file, header=None)
+        ruas = df.iloc[:, 0].dropna().tolist()
+
+        # Escolhe melhor sequência de coordenadas com base nas opções possíveis
+        coords, erro = escolher_melhor_rota(ruas)
+        if erro:
+            return jsonify({'error': erro}), 400
+
+        # Gera rota real com OSRM entre cada par consecutivo
+        rota_coords = []
+        falhas_osrm = []
+
+        for i in range(len(coords) - 1):
+            origem = coords[i]
+            destino = coords[i + 1]
+
+            caminho = obter_rota_osrm(origem, destino)
+            if caminho:
+                # Converte [lng, lat] para [lat, lng]
+                rota_coords.extend([[lat, lng] for lng, lat in caminho])
+            else:
+                print(f"Falha na rota OSRM entre pontos {origem} e {destino}, adicionando linha reta.")
+                falhas_osrm.append({'de': origem, 'para': destino})
+                rota_coords.append(origem)
+                rota_coords.append(destino)
+
+        if not rota_coords:
+            return jsonify({'error': 'Não foi possível gerar rota com OSRM'}), 400
+
+        # Atualiza dados no bus.json
+        onibus = carregar_dados_onibus()
+        atualizado = False
+        for bus in onibus:
+            if bus['id'] == bus_id:
+                bus.setdefault('rota', {})
+                bus['rota']['coords'] = rota_coords
+                atualizado = True
+                break
+
+        if not atualizado:
+            return jsonify({'error': 'Ônibus com ID informado não encontrado'}), 404
+
+        salvar_dados_onibus(onibus)
+
+        # Também salva arquivo de ruas (opcional)
+        with open(f'data/rota_{bus_id}.json', 'w', encoding='utf-8') as f:
+            json.dump(ruas, f, ensure_ascii=False, indent=2)
+
+        return jsonify({
+            'success': True,
+            'total_ruas': len(ruas),
+            'coordenadas_encontradas': len(coords),
+            'falhas_rota_osrm': falhas_osrm,
+            'ruas_sem_coordenada': [],  # Adicione essa linha
+            'coords': rota_coords,
+            'mensagem': f'Rota atualizada para ônibus {bus_id} com {len(coords)} pontos de rota.'
+        }), 200
+
+    except Exception as e:
+        print("=== ERRO NO /api/upload_rota_xls ===")
+        traceback.print_exc()
+        return jsonify({'error': 'Erro interno no servidor'}), 500

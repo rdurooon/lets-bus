@@ -17,6 +17,7 @@
     />
   </head>
   <body>
+    <body data-email="{{ usuario.email if usuario else '' }}">
     <div class="container">
       <div class="cabecalho-formulario">
         <div class="textos">
@@ -56,6 +57,13 @@
           <span>Não tem uma conta? <a href="/cadastro">Cadastre-se</a></span>
         </div>
       </form>
+    </div>
+
+    <div id="popup-fundo-login" class="popup-fundo" style="display: none;">
+      <div id="popup-sucesso-login" class="popup-confirmacao">
+        <h2>Login bem-sucedido!</h2>
+        <button onclick="irParaMapa()" class="botao-popup">Ir para o mapa</button>
+      </div>
     </div>
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
   </body>
