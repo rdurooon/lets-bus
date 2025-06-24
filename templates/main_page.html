@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LetsBus</title>
@@ -11,37 +11,39 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <!-- Ícones -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
-  </head>
-  <body>
+</head>
+<body>
     <!-- Menu fixo -->
     <header class="header">
-      <nav class="nav-container">
-        <div class="nav-logo">
-          <img src="{{ url_for('static', filename='img/lets-bus_logo.png') }}" alt="Logo LetsBus" />
-        </div>
+        <nav class="nav-container">
+            <div class="nav-logo">
+                <img src="{{ url_for('static', filename='img/lets-bus_logo.png') }}" alt="Logo LetsBus" />
+            </div>
 
-        <div class="nav-toggle" id="nav-toggle">
-          <i class="ri-menu-line nav-burguer"></i>
-          <i class="ri-close-line nav-close"></i>
-        </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <i class="ri-menu-line nav-burguer"></i>
+                <i class="ri-close-line nav-close"></i>
+            </div>
 
-        <div class="nav-menu" id="nav-menu">
-          <form class="nav-search">
-            <input type="text" placeholder="Buscar ônibus..." />
-            <button type="submit"><i class="ri-search-line"></i></button>
-          </form>
+            <div class="nav-menu" id="nav-menu">
+                <form class="nav-search">
+                    <input type="text" placeholder="Buscar ônibus..." />
+                    <button type="submit"><i class="ri-search-line"></i></button>
+                </form>
 
-          <ul class="nav-links">
-            {% if usuario %}
-              <li><span class="nav-link">Bem-vindo, {{ usuario.nome }}!</span></li>
-              <li><a href="/logout" class="nav-link">Sair</a></li>
-            {% else %}
-              <li><a href="/login" class="nav-link">Entrar</a></li>
-              <li><a href="/cadastro" class="nav-link">Cadastrar</a></li>
-            {% endif %}
-          </ul>
-        </div>
-      </nav>
+                <ul class="nav-links">
+                    {% if usuario %}
+                        <li><span class="nav-link">Bem-vindo, {{ usuario.nome }}!</span></li>
+                        <li><a href="#" class="nav-link" id="cadastrar-parada-link">Cadastrar Parada</a></li>
+                        <li><a href="#" class="nav-link" id="favoritos-link">Favoritos</a></li>
+                        <li><a href="/logout" class="nav-link">Sair</a></li>
+                    {% else %}
+                        <li><a href="/login" class="nav-link">Entrar</a></li>
+                        <li><a href="/cadastro" class="nav-link">Cadastrar</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
     </header>
 
     <!-- Mapa sempre visível -->
@@ -49,13 +51,79 @@
 
     <!-- Popup escondido -->
     <div id="popup-fundo" style="display:none;">
-      <div id="popup-confirmacao">
-        <div>Voto computado!</div>
-        <button id="popup-fechar">Voltar</button>
-      </div>
+        <div id="popup-confirmacao">
+            <div>Voto computado!</div>
+            <button id="popup-fechar">Voltar</button>
+        </div>
     </div>
+
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-  </body>
+    <script>
+        // Função para cadastrar uma nova parada
+        document.getElementById('cadastrar-parada-link').addEventListener('click', function(e) {
+            e.preventDefault(); // Previne o comportamento padrão do link
+            const nome = prompt("Digite um nome para a parada:");
+            const localizacao = prompt("Digite a localização da parada:");
+
+            if (!nome || !localizacao) {
+                alert("Nome e localização são obrigatórios.");
+                return;
+            }
+
+            fetch('/api/cadastrar_parada', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: nome,
+                    localizacao: localizacao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert(data.erro);
+                } else {
+                    alert(data.status);
+                    location.reload(); // Atualiza a página para refletir a nova parada
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao cadastrar parada:', error);
+                alert('Erro ao cadastrar parada. Tente novamente.');
+            });
+        });
+
+        // Função para mostrar paradas favoritas
+        document.getElementById('favoritos-link').addEventListener('click', function(e) {
+            e.preventDefault(); // Previne o comportamento padrão do link
+
+            fetch('/api/favoritar_parada', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    parada_id: prompt("Digite o ID da parada que deseja favoritar:")
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert(data.erro);
+                } else {
+                    alert(data.status);
+                    location.reload(); // Atualiza a página para refletir as mudanças
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao favoritar parada:', error);
+                alert('Erro ao favoritar parada. Tente novamente.');
+            });
+        });
+    </script>
+</body>
 </html>

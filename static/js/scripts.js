@@ -12,41 +12,55 @@ document.addEventListener("DOMContentLoaded", () => {
       if (rotaAtivaPolyline) {
         rotaAtivaPolyline.remove();
       }
-      rotaAtivaPolyline = L.polyline(coords, { color: cor, weight: 5, opacity: 0.7 }).addTo(map);
+      rotaAtivaPolyline = L.polyline(coords, {
+        color: cor,
+        weight: 5,
+        opacity: 0.7,
+      }).addTo(map);
     }
 
-    const tileLayerLight = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "LetsBus",
-    });
+    const tileLayerLight = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution: "LetsBus",
+      }
+    );
 
-    const tileLayerDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors'
-    });
+    const tileLayerDark = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors',
+      }
+    );
 
     tileLayerLight.addTo(map);
 
     // Controle de troca de tema (claro/escuro)
-    const toggleButton = L.control({ position: 'topright' });
+    const toggleButton = L.control({ position: "topright" });
     toggleButton.onAdd = function () {
-      const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-      div.style.backgroundColor = 'white';
-      div.style.padding = '5px';
-      div.style.cursor = 'pointer';
-      div.style.fontSize = '14px';
-      div.style.fontWeight = 'bold';
-      div.style.textAlign = 'center';
+      const div = L.DomUtil.create(
+        "div",
+        "leaflet-bar leaflet-control leaflet-control-custom"
+      );
+      div.style.backgroundColor = "white";
+      div.style.padding = "5px";
+      div.style.cursor = "pointer";
+      div.style.fontSize = "14px";
+      div.style.fontWeight = "bold";
+      div.style.textAlign = "center";
       div.title = "Alternar modo claro/escuro";
-      div.innerHTML = '🌙';
+      div.innerHTML = "🌙";
 
       div.onclick = function () {
         if (map.hasLayer(tileLayerLight)) {
           map.removeLayer(tileLayerLight);
           tileLayerDark.addTo(map);
-          div.innerHTML = '☀️';
+          div.innerHTML = "☀️";
         } else {
           map.removeLayer(tileLayerDark);
           tileLayerLight.addTo(map);
-          div.innerHTML = '🌙';
+          div.innerHTML = "🌙";
         }
       };
       return div;
@@ -74,19 +88,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    map.on('click', () => {
+    map.on("click", () => {
       limparSelecaoOnibus();
     });
 
     function estadoMaisVotado(votos) {
       const estados = {
-        'vazio': { cor: 'white', label: 'Vazio' },
-        'poucos': { cor: 'limegreen', label: 'Poucos Passageiros' },
-        'muitos': { cor: 'gold', label: 'Muitos Passageiros' },
-        'lotado': { cor: 'red', label: 'Lotado' }
+        vazio: { cor: "white", label: "Vazio" },
+        poucos: { cor: "limegreen", label: "Poucos Passageiros" },
+        muitos: { cor: "gold", label: "Muitos Passageiros" },
+        lotado: { cor: "red", label: "Lotado" },
       };
 
-      let max = 0, estado = 'vazio';
+      let max = 0,
+        estado = "vazio";
       for (let [k, v] of Object.entries(votos)) {
         if (v > max) {
           max = v;
@@ -98,7 +113,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function iconeOnibus(cor) {
       const html = `<div class="icone-onibus" style="border-color: ${cor}"><img src="/static/img/bus.jpg" /></div>`;
-      return L.divIcon({ html, className: "", iconSize: [50, 50], iconAnchor: [24, 25] });
+      return L.divIcon({
+        html,
+        className: "",
+        iconSize: [50, 50],
+        iconAnchor: [24, 25],
+      });
     }
 
     async function atualizarBusao() {
@@ -107,10 +127,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!map._loaded) {
         navigator.geolocation.getCurrentPosition(
-          pos => {
+          (pos) => {
             map.setView([pos.coords.latitude, pos.coords.longitude], 15);
           },
-          err => {
+          (err) => {
             if (dados.length > 0) {
               const random = dados[Math.floor(Math.random() * dados.length)];
               map.setView([random.lat, random.lng], 15);
@@ -123,33 +143,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
       dados.forEach((bus) => {
         const { id, lat, lng, rota, votos } = bus;
-        const estado = estadoMaisVotado(votos || { vazio: 0, poucos: 0, muitos: 0, lotado: 0 });
-        const estadoChave = Object.entries({
-          'vazio': { cor: 'white', label: 'Vazio' },
-          'poucos': { cor: 'limegreen', label: 'Poucos Passageiros' },
-          'muitos': { cor: 'gold', label: 'Muitos Passageiros' },
-          'lotado': { cor: 'red', label: 'Lotado' }
-        }).find(([key, val]) => val.label === estado.label)?.[0] || 'vazio';
+        const estado = estadoMaisVotado(
+          votos || { vazio: 0, poucos: 0, muitos: 0, lotado: 0 }
+        );
+        const estadoChave =
+          Object.entries({
+            vazio: { cor: "white", label: "Vazio" },
+            poucos: { cor: "limegreen", label: "Poucos Passageiros" },
+            muitos: { cor: "gold", label: "Muitos Passageiros" },
+            lotado: { cor: "red", label: "Lotado" },
+          }).find(([key, val]) => val.label === estado.label)?.[0] || "vazio";
 
         const popup = `
-          <div>
-            <strong>Ônibus #${id}</strong><br>
-            Rota: ${decodeUtf8(rota.nome)}<br>
-            Lotação: <span class="estado-lotacao ${estadoChave}">${estado.label}</span><br><br>
-            <div class="popup-onibus-voto">
-              <button class="botao-votar-lotacao" onclick="recentralizarMapa(${lat}, ${lng}); abrirVotacao('${id}', ${lat}, ${lng})">Votar na Lotação</button>
-            </div>
-          </div>
-        `;
-
+  <div>
+    <strong>Ônibus #${id}</strong><br>
+    Rota: ${decodeUtf8(rota.nome)}<br>
+    Lotação: <span class="estado-lotacao ${estadoChave}">${
+          estado.label
+        }</span><br><br>
+    <div class="popup-onibus-voto">
+      <button class="botao-votar-lotacao" data-id="${id}" data-lat="${lat}" data-lng="${lng}">Votar na Lotação</button>
+    </div>
+  </div>
+`;
         if (marcadores[id]) {
           // Atualiza posição e popup
           marcadores[id].setLatLng([lat, lng]);
           marcadores[id].getPopup().setContent(popup);
         } else {
-          const marcador = L.marker([lat, lng], { icon: iconeOnibus(rota.cor) });
+          const marcador = L.marker([lat, lng], {
+            icon: iconeOnibus(rota.cor),
+          });
           marcador.bindPopup(popup).addTo(map);
-          marcador.on('click', () => {
+          marcador.on("click", () => {
             marcadorSelecionadoId = id;
             map.setView(marcador.getLatLng(), 15, { animate: true });
             marcador.openPopup();
@@ -177,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch("/static/data/paradas.json");
         const paradas = await res.json();
 
-        paradas.forEach(parada => {
+        paradas.forEach((parada) => {
           const { nome, localizacao, lat, lng } = parada;
           if (!lat || !lng) return;
 
@@ -186,11 +212,13 @@ document.addEventListener("DOMContentLoaded", () => {
               iconUrl: "/static/img/parada.png",
               iconSize: [32, 32],
               iconAnchor: [16, 32],
-              popupAnchor: [0, -32]
-            })
+              popupAnchor: [0, -32],
+            }),
           });
 
-          marcadorParada.bindPopup(`<strong>${nome}</strong><br>${localizacao}`);
+          marcadorParada.bindPopup(
+            `<strong>${nome}</strong><br>${localizacao}`
+          );
           marcadorParada.addTo(map);
         });
       } catch (e) {
@@ -202,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------ FORMULÁRIO CADASTRAR PARADA ------------------
-  window.abrirFormularioParada = function(lat, lng) {
+  window.abrirFormularioParada = function (lat, lng) {
     const nome = prompt("Digite um nome para esta parada:");
     if (!nome) return;
 
@@ -213,17 +241,18 @@ document.addEventListener("DOMContentLoaded", () => {
         nome: nome,
         localizacao: "Criada pelo usuário no local atual",
         lat: lat,
-        lng: lng
-      })
-    }).then(res => res.json())
-      .then(json => {
+        lng: lng,
+      }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
         alert(json.status || json.erro);
         location.reload(); // Atualiza o mapa com a nova parada
       });
-  }
+  };
 
   // ------------------ MOSTRAR FAVORITAS ------------------
-  window.mostrarFavoritas = async function() {
+  window.mostrarFavoritas = async function () {
     try {
       // Pega o email do usuário via template Jinja
       const email = document.body.dataset.email;
@@ -234,10 +263,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Busca dados dos usuários para achar os favoritos
-      const resUser  = await fetch("/data/usuarios.json");
-      const usuarios = await resUser .json();
+      const resUser = await fetch("/data/usuarios.json");
+      const usuarios = await resUser.json();
 
-      const usuario = usuarios.find(u => u.email === email);
+      const usuario = usuarios.find((u) => u.email === email);
       if (!usuario || !usuario.favoritos || usuario.favoritos.length === 0) {
         alert("Nenhuma parada favorita encontrada.");
         return;
@@ -248,17 +277,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const paradas = await resParadas.json();
 
       // Filtra só as paradas favoritas do usuário
-      const lista = paradas.filter(p => usuario.favoritos.includes(p.id));
+      const lista = paradas.filter((p) => usuario.favoritos.includes(p.id));
 
-      const listaTexto = lista.map(p => `• ${p.nome} (${p.localizacao})`).join("\n") || "Nenhuma parada favorita.";
+      const listaTexto =
+        lista.map((p) => `• ${p.nome} (${p.localizacao})`).join("\n") ||
+        "Nenhuma parada favorita.";
 
       alert("Paradas Favoritas:\n\n" + listaTexto);
-
     } catch (e) {
       alert("Erro ao buscar paradas favoritas.");
       console.error(e);
     }
-  }
+  };
 
   // ------------------ LOGIN ------------------
   const formLogin = document.getElementById("formLogin");
@@ -272,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const resposta = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha })
+        body: JSON.stringify({ email, senha }),
       });
 
       const dados = await resposta.json();
@@ -287,17 +317,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ------------------ CADASTRO ------------------
   function abrirPopupCadastroSucesso(nomeUsuario) {
-  const fundo = document.getElementById('popup-fundo-cadastro');
-  const popup = document.getElementById('popup-sucesso-cadastro');
-  const nomeSpan = document.getElementById('nome-usuario-popup');
+    const fundo = document.getElementById("popup-fundo-cadastro");
+    const popup = document.getElementById("popup-sucesso-cadastro");
+    const nomeSpan = document.getElementById("nome-usuario-popup");
 
-  nomeSpan.textContent = nomeUsuario;
+    nomeSpan.textContent = nomeUsuario;
 
-  fundo.style.display = 'flex';
+    fundo.style.display = "flex";
 
-  popup.style.animation = 'none';
-  popup.offsetHeight;
-  popup.style.animation = null;
+    popup.style.animation = "none";
+    popup.offsetHeight;
+    popup.style.animation = null;
   }
 
   const formCadastro = document.getElementById("formCadastro");
@@ -318,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const resposta = await fetch("/api/cadastro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, telefone, email, senha })
+        body: JSON.stringify({ nome, telefone, email, senha }),
       });
 
       const dados = await resposta.json();
@@ -327,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const loginRes = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, senha })
+          body: JSON.stringify({ email, senha }),
         });
 
         const loginDados = await loginRes.json();
@@ -335,7 +365,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (loginDados.status === "sucesso") {
           abrirPopupCadastroSucesso(nome);
         } else {
-          alert("Cadastro realizado, mas falha no login automático. Faça login manualmente.");
+          alert(
+            "Cadastro realizado, mas falha no login automático. Faça login manualmente."
+          );
           window.location.href = "/login";
         }
       } else {
@@ -345,8 +377,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------ MÁSCARA DE TELEFONE ------------------
-  if (window.jQuery && $('#reg-tel').length) {
-    $('#reg-tel').mask('(00) 00000-0000');
+  if (window.jQuery && $("#reg-tel").length) {
+    $("#reg-tel").mask("(00) 00000-0000");
   }
 });
 
@@ -380,34 +412,34 @@ if (navToggle && navMenu) {
 
 // ---- POPUP DE VOTO CONFIRMADO -----
 function abrirPopupConfirmacao() {
-  const fundo = document.getElementById('popup-fundo');
-  const popup = document.getElementById('popup-confirmacao');
+  const fundo = document.getElementById("popup-fundo");
+  const popup = document.getElementById("popup-confirmacao");
 
-  fundo.style.display = 'flex';
+  fundo.style.display = "flex";
 
-  popup.style.animation = 'none';
+  popup.style.animation = "none";
   popup.offsetHeight;
   popup.style.animation = null;
 }
 
 function fecharPopupConfirmacao() {
-  const fundo = document.getElementById('popup-fundo');
-  fundo.style.display = 'none';
+  const fundo = document.getElementById("popup-fundo");
+  fundo.style.display = "none";
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const btnFechar = document.getElementById('popup-fechar');
-  btnFechar.addEventListener('click', fecharPopupConfirmacao);
+document.addEventListener("DOMContentLoaded", () => {
+  const btnFechar = document.getElementById("popup-fechar");
+  btnFechar.addEventListener("click", fecharPopupConfirmacao);
 });
 
 // ---- POPUP DE LOGIN -----
 function abrirPopupLoginSucesso() {
-  const fundo = document.getElementById('popup-fundo-login');
-  const popup = document.getElementById('popup-sucesso-login');
+  const fundo = document.getElementById("popup-fundo-login");
+  const popup = document.getElementById("popup-sucesso-login");
 
-  fundo.style.display = 'flex';
+  fundo.style.display = "flex";
 
-  popup.style.animation = 'none';
+  popup.style.animation = "none";
   popup.offsetHeight;
   popup.style.animation = null;
 }

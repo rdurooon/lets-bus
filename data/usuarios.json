@@ -1,3 +1,14 @@
 [
-
+  {
+    "nome": "Leandro",
+    "telefone": "(91) 98266-4242",
+    "email": "duartemarques66@gmail.com",
+    "senha": "scrypt:32768:8:1$YtrPafAHrARPBobP$98a968a7a8c074a94adde38f0a74b9f5ca5597a682fc6f7a9d924102b1f3010d626dd73f69dd68c65435cab7d7a182467a5c1e1859727c1b9462cb8615ae9ade",
+    "favoritos": [],
+    "paradas_cadastradas": [
+      2,
+      1
+    ],
+    "admin": false
+  }
 ]
