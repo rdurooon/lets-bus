@@ -16,6 +16,8 @@ usuarios_path = os.path.join('data', 'usuarios.json')
 onibus_dados_path = os.path.join('data', 'bus.json')
 tokens_path = os.path.join('data', 'tokens_recuperacao.json')
 paradas_path = os.path.join('data', 'paradas.json')
+imei_id_path = os.path.join('data', 'imei_id.json')
+
 
 # ---------------- RE-ROTAS ----------------
 @routes.before_request
@@ -87,6 +89,19 @@ def salvar_paradas(lista_paradas):
     with open(paradas_path, 'w') as f:
         json.dump(lista_paradas, f, indent=2)
 
+def carregar_imei_id():
+    if os.path.exists(imei_id_path):
+        with open(imei_id_path, 'r') as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
+    return {}
+
+def salvar_imei_id(dados):
+    with open(imei_id_path, 'w') as f:
+        json.dump(dados, f, indent=2)
+
 # ------------- FUNÇÕES SOBRE ROTAS DOS ONIBUS ----------------
 def arredondar_coordenadas(coordenadas):
     return [[round(lat, 4), round(lon, 4)] for lat, lon in coordenadas]
@@ -141,21 +156,16 @@ def buscar_coordenadas_possiveis(rua, cidade='Santana', estado='Amapá', limite=
     return []
 
 def distancia_pontos(p1, p2):
-    # distância euclidiana simples (latitude e longitude em graus)
     return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
 
 def escolher_melhor_rota(ruas):
-    # ruas é lista de nomes das ruas
-    # para cada rua pega lista de coordenadas possíveis
     lista_opcoes = [buscar_coordenadas_possiveis(rua) for rua in ruas]
 
-    # Verifica se alguma rua não tem opções
     for idx, opcoes in enumerate(lista_opcoes):
         if not opcoes:
             return None, f"Não há opções para a rua: {ruas[idx]}"
 
     rota_final = []
-    # Escolhe arbitrariamente a primeira opção da primeira rua
     rota_final.append(lista_opcoes[0][0])
 
     for i in range(1, len(lista_opcoes)):
@@ -174,7 +184,6 @@ def escolher_melhor_rota(ruas):
         if melhor_par:
             rota_final.append(melhor_par)
         else:
-            # fallback: primeira opção
             rota_final.append(opcoes_proxima_rua[0])
 
     return rota_final, None
@@ -216,7 +225,6 @@ def obter_rota_osrm(origem, destino):
     return None
 
 # ----------- ROTAS DE PÁGINAS -----------
-
 @routes.route("/")
 def main():
     usuario = session.get('usuario')
@@ -309,6 +317,29 @@ def votar():
                     json.dump(onibus, f, indent=4)
                 return jsonify({'status': 'Voto computado'})
     return jsonify({'erro': 'Ônibus não encontrado'}), 404
+
+@routes.route('/api/imei_id', methods=['POST'])
+def get_id_by_imei():
+    imei_data = request.get_json()
+
+    if not imei_data or 'imei' not in imei_data:
+        return jsonify({'error': 'IMEI não fornecido'}), 400
+
+    imei = imei_data['imei']
+
+    imei_file = 'data/imei_id.json'
+    if not os.path.exists(imei_file):
+        return jsonify({'error': 'Arquivo IMEI não encontrado'}), 500
+
+    with open(imei_file, 'r') as f:
+        imei_map = json.load(f)
+
+    bus_id = imei_map.get(imei)
+
+    if not bus_id:
+        return jsonify({'error': 'IMEI não cadastrado'}), 404
+
+    return jsonify({'id': bus_id})
 
 # ----------- API: LOGIN / CADASTRO -----------
 
@@ -485,6 +516,20 @@ def update_location_url():
 
     return jsonify({'erro': 'Ônibus não encontrado'}), 404
 
+# ----------- API: ID ONIBUS POR IMEI -----------------
+@routes.route('/api/imei_bus_id', methods=['GET'])
+def api_imei_bus_id():
+    imei = request.args.get('imei')
+    if not imei:
+        return jsonify({'error': 'IMEI não fornecido'}), 400
+    
+    mappings = carregar_imei_id()
+    bus_id = mappings.get(imei)
+
+    if bus_id is None:
+        return jsonify({'error': 'IMEI não encontrado'}), 404
+    
+    return jsonify({'bus_id': bus_id})
 
 # ----------- ROTA PAINEL ADMIN -----------
 def admin_required(f):
@@ -496,14 +541,63 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decoreted_function
 
-@routes.route('/admin')
+@routes.route('/admin', methods=['GET', 'POST'])
 @admin_required
 def painel_admin():
     usuario = session.get('usuario')
     onibus = carregar_dados_onibus()
     paradas = carregar_paradas()
     usuarios = carregar_usuarios()
-    return render_template("admin_page.html", usuario=usuario, onibus=onibus, paradas=paradas, usuarios=usuarios)
+    mappings = carregar_imei_id()  # dict {imei: bus_id}
+
+    mensagem_sucesso = None
+    mensagem_erro = None
+
+    if request.method == 'POST':
+        imei_remover = request.form.get('imei_remover')
+        if imei_remover:
+            if imei_remover in mappings:
+                try:
+                    del mappings[imei_remover]
+                    salvar_imei_id(mappings)
+                    mensagem_sucesso = f"Dispositivo com IMEI {imei_remover} removido com sucesso."
+                except Exception as e:
+                    mensagem_erro = "Erro ao remover o dispositivo."
+                    print("Erro ao remover IMEI map:", e)
+                    traceback.print_exc()
+            else:
+                mensagem_erro = f"IMEI {imei_remover} não encontrado."
+        else:
+            imei = request.form.get('imei', '').strip()
+            bus_id_str = request.form.get('bus_id', '').strip()
+
+            if not imei or not bus_id_str.isdigit():
+                mensagem_erro = "IMEI inválido ou ID do ônibus inválido."
+            else:
+                bus_id = int(bus_id_str)
+                existe_onibus = any(str(bus['id']) == str(bus_id) for bus in onibus)
+                if not existe_onibus:
+                    mensagem_erro = f"Ônibus com ID {bus_id} não encontrado."
+                else:
+                    mappings[imei] = bus_id
+                    try:
+                        salvar_imei_id(mappings)
+                        mensagem_sucesso = f"IMEI '{imei}' vinculado ao ônibus {bus_id} com sucesso."
+                    except Exception as e:
+                        mensagem_erro = "Erro ao salvar o mapeamento."
+                        print("Erro ao salvar IMEI map:", e)
+                        traceback.print_exc()
+
+    return render_template(
+        "admin_page.html",
+        usuario=usuario,
+        onibus=onibus,
+        paradas=paradas,
+        usuarios=usuarios,
+        mappings=mappings,
+        mensagem_sucesso=mensagem_sucesso,
+        mensagem_erro=mensagem_erro
+    )
 
 @routes.route('/api/admin/cadastrar_onibus', methods=['POST'])
 @admin_required
@@ -567,12 +661,10 @@ def upload_rota_xls():
         df = pd.read_excel(file, header=None)
         ruas = df.iloc[:, 0].dropna().tolist()
 
-        # Escolhe melhor sequência de coordenadas com base nas opções possíveis
         coords, erro = escolher_melhor_rota(ruas)
         if erro:
             return jsonify({'error': erro}), 400
 
-        # Gera rota real com OSRM entre cada par consecutivo
         rota_coords = []
         falhas_osrm = []
 
@@ -582,7 +674,6 @@ def upload_rota_xls():
 
             caminho = obter_rota_osrm(origem, destino)
             if caminho:
-                # Converte [lng, lat] para [lat, lng]
                 rota_coords.extend([[lat, lng] for lng, lat in caminho])
             else:
                 print(f"Falha na rota OSRM entre pontos {origem} e {destino}, adicionando linha reta.")
@@ -593,7 +684,6 @@ def upload_rota_xls():
         if not rota_coords:
             return jsonify({'error': 'Não foi possível gerar rota com OSRM'}), 400
 
-        # Atualiza dados no bus.json
         onibus = carregar_dados_onibus()
         atualizado = False
         for bus in onibus:
@@ -608,7 +698,6 @@ def upload_rota_xls():
 
         salvar_dados_onibus(onibus)
 
-        # Também salva arquivo de ruas (opcional)
         with open(f'data/rota_{bus_id}.json', 'w', encoding='utf-8') as f:
             json.dump(ruas, f, ensure_ascii=False, indent=2)
 
@@ -617,7 +706,7 @@ def upload_rota_xls():
             'total_ruas': len(ruas),
             'coordenadas_encontradas': len(coords),
             'falhas_rota_osrm': falhas_osrm,
-            'ruas_sem_coordenada': [],  # Adicione essa linha
+            'ruas_sem_coordenada': [], 
             'coords': rota_coords,
             'mensagem': f'Rota atualizada para ônibus {bus_id} com {len(coords)} pontos de rota.'
         }), 200

@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mapElement = document.getElementById("map");
 
   if (mapElement) {
-    map = L.map("map");
+    window.map = map = L.map("map");
 
     let rotaAtivaPolyline = null;
 
@@ -20,19 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const tileLayerLight = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        attribution: "LetsBus",
-      }
-    );
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+      });
 
-    const tileLayerDark = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors',
-      }
-    );
+    const tileLayerDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a>, &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    });
 
     tileLayerLight.addTo(map);
 
@@ -155,19 +149,18 @@ document.addEventListener("DOMContentLoaded", () => {
           }).find(([key, val]) => val.label === estado.label)?.[0] || "vazio";
 
         const popup = `
-  <div>
-    <strong>Ônibus #${id}</strong><br>
-    Rota: ${decodeUtf8(rota.nome)}<br>
-    Lotação: <span class="estado-lotacao ${estadoChave}">${
+          <div>
+            <strong>Ônibus #${id}</strong><br>
+            Rota: ${decodeUtf8(rota.nome)}<br>
+            Lotação: <span class="estado-lotacao ${estadoChave}">${
           estado.label
         }</span><br><br>
-    <div class="popup-onibus-voto">
-      <button class="botao-votar-lotacao" data-id="${id}" data-lat="${lat}" data-lng="${lng}">Votar na Lotação</button>
-    </div>
-  </div>
-`;
+            <div class="popup-onibus-voto">
+              <button class="botao-votar-lotacao" data-id="${id}" data-lat="${lat}" data-lng="${lng}">Votar na Lotação</button>
+            </div>
+          </div>
+        `;
         if (marcadores[id]) {
-          // Atualiza posição e popup
           marcadores[id].setLatLng([lat, lng]);
           marcadores[id].getPopup().setContent(popup);
         } else {
@@ -195,6 +188,53 @@ document.addEventListener("DOMContentLoaded", () => {
       if (typeof map !== "undefined") {
         map.setView([lat, lng], 18, { animate: true });
       }
+    }
+
+    map.on("popupopen", function (e) {
+      const popupNode = e.popup.getElement();
+      const btn = popupNode.querySelector(".botao-votar-lotacao");
+
+      if (btn) {
+        btn.addEventListener("click", () => {
+          const { id, lat, lng } = btn.dataset;
+          if (window.abrirVotacao) {
+            window.abrirVotacao(id, parseFloat(lat), parseFloat(lng));
+          } else {
+            console.warn("Função abrirVotacao não encontrada!");
+          }
+        });
+      }
+    });
+
+    // -------- GEOLOCALIZAÇÃO DO USUARIO -----------
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          if (window.map) {
+            const voceIcon = L.divIcon({
+              className: "voce-marker",
+              html: `
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <div style="background-color: #8a2be2; color: white; padding: 2px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 2px;">VOCÊ</div>
+                  <div style="width: 14px; height: 14px; border-radius: 50%; background-color: #8a2be2;"></div>
+                </div>
+              `,
+              iconSize: [60, 60],
+              iconAnchor: [30, 30],
+            });
+
+            L.marker([lat, lon], { icon: voceIcon }).addTo(window.map);
+          }
+        },
+        (err) => {
+          console.error("Erro ao obter localização:", err);
+        }
+      );
+    } else {
+      console.warn("Geolocalização não suportada.");
     }
 
     // ------------------ PARADAS ------------------
@@ -228,6 +268,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     carregarParadasNoMapa();
   }
+
+  // --------- BTN "VOTAR EM LOTAÇÃO" -------------
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".botao-votar-lotacao");
+    if (btn) {
+      const { id, lat, lng } = btn.dataset;
+      if (window.abrirVotacao) {
+        window.abrirVotacao(id, parseFloat(lat), parseFloat(lng));
+      } else {
+        console.warn("Função 'Abrir Votacao' não encontrada!");
+      }
+    }
+  });
 
   // ------------------ FORMULÁRIO CADASTRAR PARADA ------------------
   window.abrirFormularioParada = function (lat, lng) {
@@ -375,6 +429,65 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // ----- VOTAÇÃO DE LOTAÇÃO ------
+  window.abrirVotacao = function (id, lat, lng) {
+    const popup = `
+      <div class="popup-onibus" style="text-align:center;">
+        <h4 style="margin-bottom: 10px; color: black;">Como está a lotação do ônibus</h4>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <button class="botao-voto vazio" onclick="enviarVoto('${id}', 'vazio')">Vazio</button>
+          <button class="botao-voto poucos" onclick="enviarVoto('${id}', 'poucos')">Poucos passageiros</button>
+          <button class="botao-voto muitos" onclick="enviarVoto('${id}', 'muitos')">Muitos passageiros</button>
+          <button class="botao-voto lotado" onclick="enviarVoto('${id}', 'lotado')">Lotado</button>
+        </div>
+      </div>
+    `;
+    L.popup().setLatLng([lat, lng]).setContent(popup).openOn(map);
+  }
+
+  // ------ ENVIAR VOTO -------
+  window.enviarVoto = async function (id, voto) {
+    try {
+      const res = await fetch('/api/votar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, voto })
+      });
+
+      const resposta = await res.json();
+
+      if (res.ok && resposta.status === "Voto computado") {
+        abrirPopupConfirmacao(); 
+      } else {
+        alert(resposta.erro || "Erro ao computar voto.");
+      }
+    } catch (err) {
+      console.error('Erro ao enviar voto:', err);
+      alert('Erro de conexão ou servidor.');
+    }
+  };
+    
+  function abrirPopupConfirmacao() {
+    const fundo = document.getElementById('popup-fundo');
+    const popup = document.getElementById('popup-confirmacao');
+
+    fundo.style.display = 'flex';
+
+    popup.style.animation = 'none';
+    popup.offsetHeight;
+    popup.style.animation = null;
+  }
+
+  function fecharPopupConfirmacao() {
+    const fundo = document.getElementById('popup-fundo');
+    fundo.style.display = 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnFechar = document.getElementById('popup-fechar');
+    btnFechar.addEventListener('click', fecharPopupConfirmacao);
+  });
 
   // ------------------ MÁSCARA DE TELEFONE ------------------
   if (window.jQuery && $("#reg-tel").length) {

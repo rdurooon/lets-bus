@@ -65,6 +65,58 @@
     <pre id="modal-feedback-text" style="white-space: pre-wrap; font-family: monospace;"></pre>
     </div>
   </div>
+  <div class="admin-secao">
+    <h2>4. Atualizar ID de Ônibus pelo IMEI do Módulo GSM</h2>
+
+    <form method="POST" action="/admin" style="max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
+      <label for="bus_id">Selecione o ID do Ônibus</label>
+      <select id="bus_id" name="bus_id" class="admin-input" required>
+        <option value="" disabled selected>-- Selecione o ônibus --</option>
+        {% for bus in onibus %}
+        <option value="{{ bus.id }}">{{ bus.id }} - {{ bus.get('rota', {}).get('nome', 'Sem rota') }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="imei">Digite o IMEI do Módulo GSM</label>
+      <input type="text" id="imei" name="imei" class="admin-input" placeholder="Ex: 865067029012345" required pattern="\d{15}" title="Digite um IMEI válido de 15 dígitos" />
+
+      <button type="submit" class="admin-botao">Salvar</button>
+    </form>
+
+    {% if mensagem_sucesso %}
+    <p style="color: green; margin-top: 10px;">{{ mensagem_sucesso }}</p>
+    {% endif %}
+    {% if mensagem_erro %}
+    <p style="color: red; margin-top: 10px;">{{ mensagem_erro }}</p>
+    {% endif %}
+
+    {% if mappings %}
+    <h3 style="margin-top: 30px;">📋 Dispositivos Cadastrados:</h3>
+    <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #ccc; padding: 8px;">IMEI</th>
+          <th style="border: 1px solid #ccc; padding: 8px;">ID Ônibus</th>
+          <th style="border: 1px solid #ccc; padding: 8px;">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for imei, bus_id in mappings.items() %}
+        <tr>
+          <td style="border: 1px solid #ccc; padding: 8px;">{{ imei }}</td>
+          <td style="border: 1px solid #ccc; padding: 8px;">{{ bus_id }}</td>
+          <td style="border: 1px solid #ccc; padding: 8px;">
+            <form method="POST" action="/admin" style="margin:0;">
+              <input type="hidden" name="imei_remover" value="{{ imei }}">
+              <button type="submit" class="admin-botao" style="background-color: #d9534f;">Remover</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modalFeedback.style.display = 'none';
   };
 
-  // Fechar modal clicando fora do conteúdo
   window.onclick = function(event) {
     if (event.target === modalFeedback) {
       modalFeedback.style.display = 'none';
