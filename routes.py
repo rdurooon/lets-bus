@@ -228,7 +228,10 @@ def obter_rota_osrm(origem, destino):
 @routes.route("/")
 def main():
     usuario = session.get('usuario')
-    return render_template("main_page.html", usuario=usuario)
+    user_role = False
+    if usuario:
+        user_role = usuario.get('admin', False)
+    return render_template("main_page.html", usuario=usuario, user_role=user_role)
 
 @routes.route("/login")
 def login():

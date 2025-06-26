@@ -171,7 +171,9 @@ body {
 }
 
 .nav-logo img {
-  height: 40px;
+  margin-top: 6px;
+  height: 65px;
+  width: auto;
 }
 
 /* TOGGLE BUTTON */
