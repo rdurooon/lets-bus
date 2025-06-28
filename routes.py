@@ -102,6 +102,19 @@ def salvar_imei_id(dados):
     with open(imei_id_path, 'w') as f:
         json.dump(dados, f, indent=2)
 
+def remover_imei_id(imei):
+    with open(imei_id_path, 'r') as f:
+        dados = json.load(f)
+
+    if imei in dados:
+        del dados[imei]
+
+        with open(imei_id_path, 'w') as f:
+            json.dump(dados, f)
+
+    else:
+        raise ValueError("IMEI não encontrado")
+
 # ------------- FUNÇÕES SOBRE ROTAS DOS ONIBUS ----------------
 def arredondar_coordenadas(coordenadas):
     return [[round(lat, 4), round(lon, 4)] for lat, lon in coordenadas]
@@ -301,6 +314,54 @@ def redefinir_senha(token):
 def api_onibus():
     dados = carregar_dados_onibus()
     return jsonify(dados)
+
+@routes.route('/api/imei_id', methods=['GET'])
+def listar_imei_id():
+    dados = carregar_imei_id()
+    return jsonify(dados)
+
+@routes.route('/api/salvar_imei', methods=['POST'])
+def salvar_imei():
+    data = request.get_json()
+    imei = data.get('imei', '').strip()
+    bus_id = data.get('id')
+
+    if not imei or not bus_id:
+        return jsonify({'error': 'IMEI ou ID do ônibus não fornecidos'}), 400
+
+    try:
+        bus_id = int(bus_id)
+    except ValueError:
+        return jsonify({'error': 'ID do ônibus inválido'}), 400
+
+    onibus = carregar_dados_onibus()
+    existe_onibus = any(str(bus['id']) == str(bus_id) for bus in onibus)
+
+    if not existe_onibus:
+        return jsonify({'error': f'Ônibus com ID {bus_id} não encontrado.'}), 404
+
+    mappings = carregar_imei_id()
+    mappings[imei] = bus_id
+
+    try:
+        salvar_imei_id(mappings)
+        return jsonify({'status': 'IMEI vinculado ao ônibus com sucesso.'})
+    except Exception as e:
+        print("Erro ao salvar IMEI:", e)
+        return jsonify({'error': 'Erro ao salvar o mapeamento.'}), 500
+
+@routes.route('/api/remover_imei', methods=['POST'])
+def remover_imei():
+    data = request.json
+    imei = data.get('imei')
+    if not imei:
+        return jsonify({'error': 'IMEI não fornecido'}), 400
+    try:
+        # Remover do armazenamento (arquivo, banco, etc)
+        remover_imei_id(imei)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @routes.route('/api/votar', methods=['POST'])
 def votar():

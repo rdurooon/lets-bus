@@ -1,122 +1,66 @@
-<!-- admin_page.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png" />
   <title>Painel do Administrador - LetsBus</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
+
 <body>
+  <button id="menu-toggle" class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside id="menu-lateral" class="sidebar">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='img/lets-bus_logo.png') }}" alt="Logo LetsBus" class="logo-img">
+      </div>
 
-  <h1 class="admin-titulo">Painel Administrativo</h1>
+      <div class="sidebar-section">
+        <button class="section-toggle" data-target="onibus-submenu">Ônibus <span class="seta">▸</span></button>
+        <div class="submenu" id="onibus-submenu" style="margin-top: 5px;">
+          <button onclick="abrirSecao('cadastrar-onibus')">Cadastrar novo ônibus</button>
+          <button onclick="abrirSecao('atualizar-onibus')">Atualizar ônibus</button>
+          <button onclick="abrirSecao('upload-xls')">Atualizar rotas por arquivo XLS</button>
+        </div>
+      </div>
 
-  <div class="admin-secao">
-    <h2>1. Cadastrar Novo Ônibus</h2>
-    <label for="id-onibus">ID do ônibus</label>
-    <input type="text" id="id-onibus" class="admin-input" placeholder="Ex: 1002" />
+      <div class="sidebar-section">
+        <button class="section-toggle" data-target="usuarios-submenu">Usuários <span class="seta">▸</span></button>
+        <div class="submenu" id="usuarios-submenu" style="margin-top: 5px;">
+          <button onclick="abrirSecao('ver-usuarios')">Ver usuários</button>
+        </div>
+      </div>
 
-    <label for="lat">Latitude</label>
-    <input type="text" id="lat" class="admin-input" placeholder="Ex: -0.025000" />
+      <div class="sidebar-section">
+        <button class="section-toggle" data-target="dispositivo-submenu">Dispositivos<span
+            class="seta">▸</span></button>
+        <div class="submenu" id="dispositivo-submenu" style="margin-top: 5px;">
+          <button onclick="abrirSecao('imei_id')">Buscar ID do ônibus pelo IMEI</button>
+        </div>
+      </div>
 
-    <label for="lng">Longitude</label>
-    <input type="text" id="lng" class="admin-input" placeholder="Ex: -51.170000" />
+      <button class="voltar-mapa" onclick="window.location.href='/'">Voltar para o mapa</button>
+    </aside>
 
-    <label for="rota">Nome da Rota</label>
-    <input type="text" id="rota" class="admin-input" placeholder="Ex: Novo Horizonte" />
 
-    <label for="cor">Cor da Rota</label>
-    <input type="text" id="cor" class="admin-input" placeholder="Ex: blue" />
-
-    <button class="admin-botao" onclick="cadastrarOnibus()">Cadastrar Ônibus</button>
+    <!-- Conteúdo Principal -->
+    <main class="admin-main">
+      <div id="conteudo-admin">
+        <h2 class="titulo-central">PAINEL DA ADMINISTRAÇÃO</h2>
+      </div>
+    </main>
   </div>
 
-  <div class="admin-secao">
-    <h2>2. Upload de arquivo XLS com nomes das ruas para rotas</h2>
-    <div class="upload-container">
-      <label for="upload-xls" class="upload-label">📄 Escolher Arquivo XLS</label>
-      <input type="file" id="upload-xls" accept=".xls,.xlsx" />
-      <span id="upload-nome-arquivo" class="upload-nome">Nenhum arquivo selecionado</span>
-    </div>
-    <label for="upload-xls-rota-id">ID do ônibus para atualizar a rota</label>
-    <input type="text" id="upload-xls-rota-id" placeholder="Ex: 1002" class="admin-input" />
-    <button id="btn-enviar-xls" class="admin-botao">Enviar XLS e Atualizar Rota</button>
-    <div id="upload-feedback" style="margin-top: 10px; font-weight: bold;"></div>
-  </div>
-
-  <div class="admin-secao">
-    <h2>3. Remover Parada</h2>
-    <label for="parada-id">ID da parada</label>
-    <input type="text" id="parada-id" class="admin-input" />
-
-    <button class="admin-botao" onclick="removerParada()">Remover Parada</button>
-  </div>
-  <div id="modal-loading" class="modal-loading" style="display:none;">
-    <div class="modal-content-loading">
-      <div class="spinner"></div>
-      <p style="margin-top: 10px;">Enviando arquivo e atualizando rota...</p>
-    </div>
-  </div>
-
-  <div id="modal-feedback" class="modal-feedback" style="display:none;">
-    <div class="modal-feedback-content">
-    <span id="modal-feedback-close" class="modal-feedback-close">&times;</span>
-    <pre id="modal-feedback-text" style="white-space: pre-wrap; font-family: monospace;"></pre>
-    </div>
-  </div>
-  <div class="admin-secao">
-    <h2>4. Atualizar ID de Ônibus pelo IMEI do Módulo GSM</h2>
-
-    <form method="POST" action="/admin" style="max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
-      <label for="bus_id">Selecione o ID do Ônibus</label>
-      <select id="bus_id" name="bus_id" class="admin-input" required>
-        <option value="" disabled selected>-- Selecione o ônibus --</option>
-        {% for bus in onibus %}
-        <option value="{{ bus.id }}">{{ bus.id }} - {{ bus.get('rota', {}).get('nome', 'Sem rota') }}</option>
-        {% endfor %}
-      </select>
-
-      <label for="imei">Digite o IMEI do Módulo GSM</label>
-      <input type="text" id="imei" name="imei" class="admin-input" placeholder="Ex: 865067029012345" required pattern="\d{15}" title="Digite um IMEI válido de 15 dígitos" />
-
-      <button type="submit" class="admin-botao">Salvar</button>
-    </form>
-
-    {% if mensagem_sucesso %}
-    <p style="color: green; margin-top: 10px;">{{ mensagem_sucesso }}</p>
-    {% endif %}
-    {% if mensagem_erro %}
-    <p style="color: red; margin-top: 10px;">{{ mensagem_erro }}</p>
-    {% endif %}
-
-    {% if mappings %}
-    <h3 style="margin-top: 30px;">📋 Dispositivos Cadastrados:</h3>
-    <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <thead>
-        <tr>
-          <th style="border: 1px solid #ccc; padding: 8px;">IMEI</th>
-          <th style="border: 1px solid #ccc; padding: 8px;">ID Ônibus</th>
-          <th style="border: 1px solid #ccc; padding: 8px;">Ação</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for imei, bus_id in mappings.items() %}
-        <tr>
-          <td style="border: 1px solid #ccc; padding: 8px;">{{ imei }}</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">{{ bus_id }}</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">
-            <form method="POST" action="/admin" style="margin:0;">
-              <input type="hidden" name="imei_remover" value="{{ imei }}">
-              <button type="submit" class="admin-botao" style="background-color: #d9534f;">Remover</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-  </div>
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('active');
+    }
+  </script>
 </body>
+
 </html>
