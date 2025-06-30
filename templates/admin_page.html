@@ -7,9 +7,11 @@
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png" />
   <title>Painel do Administrador - LetsBus</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <button id="menu-toggle" class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
   <div class="admin-container">
     <!-- Sidebar -->
@@ -21,6 +23,7 @@
       <div class="sidebar-section">
         <button class="section-toggle" data-target="onibus-submenu">Ônibus <span class="seta">▸</span></button>
         <div class="submenu" id="onibus-submenu" style="margin-top: 5px;">
+          <button onclick="abrirSecao('visual-onibus')">Visualizar ônibus</button>
           <button onclick="abrirSecao('cadastrar-onibus')">Cadastrar novo ônibus</button>
           <button onclick="abrirSecao('atualizar-onibus')">Atualizar ônibus</button>
           <button onclick="abrirSecao('upload-xls')">Atualizar rotas por arquivo XLS</button>

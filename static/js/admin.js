@@ -22,6 +22,63 @@ document.addEventListener('DOMContentLoaded', () => {
     let titulo = document.createElement('h2');
     titulo.className = 'form-title';
 
+    if (secao === "visual-onibus") {
+      titulo.textContent = "Visualização de ônibus";
+      conteudo.appendChild(titulo);
+
+      fetch("/api/onibus")
+        .then((res) => res.json())
+        .then((onibus) => {
+          onibus.forEach((bus) => {
+            const panel = document.createElement("div");
+            panel.className = "bus-panel";
+
+            panel.innerHTML = `
+              <div class="bus-info">
+                <h3>Ônibus ID: ${bus.id}</h3>
+                <p>Rota: <span style="color:${bus.rota.cor}">${bus.rota.nome}</span></p>
+                <label class="switch">
+                  <input type="checkbox" data-busid="${bus.id}" />
+                  <span class="slider round"></span>
+                  <span class="switch-label">Mostrar no mapa</span>
+                </label>
+              </div>
+              <div id="map-${bus.id}" class="bus-map"></div>
+            `;
+
+            conteudo.appendChild(panel);
+
+            const map = L.map(`map-${bus.id}`).setView([bus.lat, bus.lng], 15);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(map);
+
+            const icon = L.divIcon({
+              className: "custom-bus-icon",
+              html: `<div class="icone-onibus" style="border-color: ${bus.rota.cor}"><img src="/static/img/bus.jpg" /></div>`,
+              iconSize: [50, 50],
+              iconAnchor: [25, 25]
+            });
+
+            const marker = L.marker([bus.lat, bus.lng], { icon }).addTo(map);
+
+            // Atualização automática
+            setInterval(() => {
+              fetch("/data/bus.json")
+                .then((res) => res.json())
+                .then((updated) => {
+                  const atual = updated.find(b => b.id === bus.id);
+                  if (atual) {
+                    marker.setLatLng([atual.lat, atual.lng]);
+                    map.setView([atual.lat, atual.lng]);
+                  }
+                });
+            }, 15000); // Atualiza a cada 15 segundos
+          });
+        });
+    }
+
+
     if (secao === "cadastrar-onibus") {
       titulo.textContent = 'Cadastrar Novo Ônibus';
       const formHTML = `

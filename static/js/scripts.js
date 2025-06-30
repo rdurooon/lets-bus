@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     atualizarBusao();
-    setInterval(atualizarBusao, 5000);
+    setInterval(atualizarBusao, 2500);
 
     function recentralizarMapa(lat, lng) {
       if (typeof map !== "undefined") {
