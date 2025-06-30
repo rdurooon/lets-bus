@@ -1,3 +1,11 @@
 [
-
+  {
+    "nome": "admin",
+    "telefone": "(99) 99999-9999",
+    "email": "admin@letsbus.com",
+    "senha": "scrypt:32768:8:1$zknyDXKeU02Sxz9g$a013db75ce234e510df32899edd02015c6df26271ae35e00a1e824df80081ef8bd92e1693930ed74e39ca03a21fec7f2b80a804eff176cefaffbc02f5195928c",
+    "favoritos": [],
+    "paradas_cadastradas": [],
+    "admin": true   
+  }
 ]

@@ -380,7 +380,6 @@ html {
   background-color: #6c757d;
 }
 
-
 .icone-onibus {
   width: 40px;
   height: 40px;
@@ -437,6 +436,13 @@ html {
   opacity: 0;
   width: 0;
   height: 0;
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .slider {

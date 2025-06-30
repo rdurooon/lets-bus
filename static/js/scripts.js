@@ -20,13 +20,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const tileLayerLight = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-      });
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+      }
+    );
 
-    const tileLayerDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors'
-    });
+    const tileLayerDark = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '&copy; <a href="https://carto.com/">CARTO</a>, &copy; OpenStreetMap contributors',
+      }
+    );
 
     tileLayerLight.addTo(map);
 
@@ -105,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return estados[estado];
     }
 
-    function iconeOnibus(cor) {
+    function iconeOnibus(cor, visivel) {
       const html = `<div class="icone-onibus" style="border-color: ${cor}"><img src="/static/img/bus.jpg" /></div>`;
       return L.divIcon({
         html,
@@ -135,8 +142,22 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
 
+      const visiveisIds = new Set();
+
       dados.forEach((bus) => {
-        const { id, lat, lng, rota, votos } = bus;
+        if (!bus.visivel) return;
+        const { id, lat, lng, rota, votos, visivel } = bus;
+
+        if (!visivel) {
+          if (marcadores[id]) {
+            map.removeLayer(marcadores[id]);
+            delete marcadores[id];
+          }
+          return;
+        }
+
+        visiveisIds.add(id);
+
         const estado = estadoMaisVotado(
           votos || { vazio: 0, poucos: 0, muitos: 0, lotado: 0 }
         );
@@ -177,6 +198,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           });
           marcadores[id] = marcador;
+        }
+      });
+
+      Object.keys(marcadores).forEach((id) => {
+        if (!dados.some((bus) => bus.id === id && bus.visivel)) {
+          map.removeLayer(marcadores[id]);
+          delete marcadores[id];
         }
       });
     }
@@ -444,49 +472,49 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
     L.popup().setLatLng([lat, lng]).setContent(popup).openOn(map);
-  }
+  };
 
   // ------ ENVIAR VOTO -------
   window.enviarVoto = async function (id, voto) {
     try {
-      const res = await fetch('/api/votar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, voto })
+      const res = await fetch("/api/votar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, voto }),
       });
 
       const resposta = await res.json();
 
       if (res.ok && resposta.status === "Voto computado") {
-        abrirPopupConfirmacao(); 
+        abrirPopupConfirmacao();
       } else {
         alert(resposta.erro || "Erro ao computar voto.");
       }
     } catch (err) {
-      console.error('Erro ao enviar voto:', err);
-      alert('Erro de conexão ou servidor.');
+      console.error("Erro ao enviar voto:", err);
+      alert("Erro de conexão ou servidor.");
     }
   };
-    
+
   function abrirPopupConfirmacao() {
-    const fundo = document.getElementById('popup-fundo');
-    const popup = document.getElementById('popup-confirmacao');
+    const fundo = document.getElementById("popup-fundo");
+    const popup = document.getElementById("popup-confirmacao");
 
-    fundo.style.display = 'flex';
+    fundo.style.display = "flex";
 
-    popup.style.animation = 'none';
+    popup.style.animation = "none";
     popup.offsetHeight;
     popup.style.animation = null;
   }
 
   function fecharPopupConfirmacao() {
-    const fundo = document.getElementById('popup-fundo');
-    fundo.style.display = 'none';
+    const fundo = document.getElementById("popup-fundo");
+    fundo.style.display = "none";
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const btnFechar = document.getElementById('popup-fechar');
-    btnFechar.addEventListener('click', fecharPopupConfirmacao);
+  document.addEventListener("DOMContentLoaded", () => {
+    const btnFechar = document.getElementById("popup-fechar");
+    btnFechar.addEventListener("click", fecharPopupConfirmacao);
   });
 
   // ------------------ MÁSCARA DE TELEFONE ------------------

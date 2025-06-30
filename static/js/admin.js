@@ -1,13 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   // ----- MENU LATERAL EXPANSÍVEL -----
-  document.querySelectorAll(".section-toggle").forEach(btn => {
+  document.querySelectorAll(".section-toggle").forEach((btn) => {
     btn.addEventListener("click", () => {
       const targetId = btn.dataset.target;
       const submenu = document.getElementById(targetId);
       submenu.classList.toggle("active");
       btn.classList.toggle("open");
 
-      const seta = btn.querySelector('.seta');
+      const seta = btn.querySelector(".seta");
       if (seta) {
         seta.textContent = submenu.classList.contains("active") ? "▾" : "▸";
       }
@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ----- NAVEGAÇÃO ENTRE SEÇÕES -----
-  window.abrirSecao = function(secao) {
-    const conteudo = document.getElementById('conteudo-admin');
-    conteudo.innerHTML = '';
+  window.abrirSecao = function (secao) {
+    const conteudo = document.getElementById("conteudo-admin");
+    conteudo.innerHTML = "";
 
-    let titulo = document.createElement('h2');
-    titulo.className = 'form-title';
+    let titulo = document.createElement("h2");
+    titulo.className = "form-title";
 
     if (secao === "visual-onibus") {
       titulo.textContent = "Visualização de ônibus";
@@ -34,17 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.className = "bus-panel";
 
             panel.innerHTML = `
-              <div class="bus-info">
-                <h3>Ônibus ID: ${bus.id}</h3>
-                <p>Rota: <span style="color:${bus.rota.cor}">${bus.rota.nome}</span></p>
+            <div class="bus-info">
+              <h3>Ônibus ID: ${bus.id}</h3>
+              <p>Rota: <span style="color:${bus.rota.cor}">${
+              bus.rota.nome
+            }</span></p>
+              <div class="switch-container">
                 <label class="switch">
-                  <input type="checkbox" data-busid="${bus.id}" />
+                  <input type="checkbox" class="visibilidade-switch" data-bus-id="${
+                    bus.id
+                  }" ${bus.visivel ? "checked" : ""}>
                   <span class="slider round"></span>
-                  <span class="switch-label">Mostrar no mapa</span>
                 </label>
+                <span class="switch-label">Mostrar no mapa</span>
               </div>
-              <div id="map-${bus.id}" class="bus-map"></div>
-            `;
+            </div>
+            <div id="map-${bus.id}" class="bus-map"></div>
+          `;
 
             conteudo.appendChild(panel);
 
@@ -55,32 +61,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const icon = L.divIcon({
               className: "custom-bus-icon",
-              html: `<div class="icone-onibus" style="border-color: ${bus.rota.cor}"><img src="/static/img/bus.jpg" /></div>`,
+              html: `<div class="icone-onibus" style="border-color: ${bus.rota.cor}">
+                    <img src="/static/img/bus.jpg" />
+                  </div>`,
               iconSize: [50, 50],
-              iconAnchor: [25, 25]
+              iconAnchor: [25, 25],
             });
 
-            const marker = L.marker([bus.lat, bus.lng], { icon }).addTo(map);
+            const marker = L.marker([bus.lat, bus.lng], { icon });
 
-            // Atualização automática
-            setInterval(() => {
+            if (bus.visivel) {
+              marker.addTo(map);
+            }
+
+            let ultimaLat = bus.lat;
+            let ultimaLng = bus.lng;
+
+            const atualizador = setInterval(() => {
+              if (!map.hasLayer(marker)) return;
               fetch("/data/bus.json")
                 .then((res) => res.json())
                 .then((updated) => {
-                  const atual = updated.find(b => b.id === bus.id);
+                  const atual = updated.find((b) => b.id === bus.id);
                   if (atual) {
-                    marker.setLatLng([atual.lat, atual.lng]);
-                    map.setView([atual.lat, atual.lng]);
+                    const novaLat = atual.lat;
+                    const novaLng = atual.lng;
+                    if (novaLat !== ultimaLat || novaLng !== ultimaLng) {
+                      marker.setLatLng([novaLat, novaLng]);
+                      map.setView([novaLat, novaLng]);
+                      ultimaLat = novaLat;
+                      ultimaLng = novaLng;
+                    }
                   }
                 });
-            }, 15000); // Atualiza a cada 15 segundos
+            }, 5000);
+
+            // Listener para visibilidade
+            const switchInput = panel.querySelector(
+              `input[data-bus-id="${bus.id}"]`
+            );
+            switchInput.addEventListener("change", () => {
+              const visivel = switchInput.checked;
+
+              fetch("/api/set_visibility", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: bus.id, visivel }),
+              });
+
+              if (visivel) {
+                marker.addTo(map);
+                map.setView(marker.getLatLng());
+              } else {
+                marker.removeFrom(map);
+              }
+            });
           });
         });
     }
 
-
     if (secao === "cadastrar-onibus") {
-      titulo.textContent = 'Cadastrar Novo Ônibus';
+      titulo.textContent = "Cadastrar Novo Ônibus";
       const formHTML = `
         <div class="form-container">
           <form class="onibus-form">
@@ -99,11 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       conteudo.appendChild(titulo);
-      conteudo.insertAdjacentHTML('beforeend', formHTML);
+      conteudo.insertAdjacentHTML("beforeend", formHTML);
     }
 
     if (secao === "upload-xls") {
-      titulo.textContent = 'Upload de Arquivo XLS';
+      titulo.textContent = "Upload de Arquivo XLS";
       const formHTML = `
         <div class="form-container">
           <form class="onibus-form" id="upload-xls-form">
@@ -125,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       conteudo.appendChild(titulo);
-      conteudo.insertAdjacentHTML('beforeend', formHTML);
+      conteudo.insertAdjacentHTML("beforeend", formHTML);
       inicializarUploadXLS();
     }
 
@@ -133,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = `<h2>Lista de usuários</h2><p>Carregando usuários...</p>`;
     }
 
-        if (secao === "imei_id"){
-      titulo.textContent = 'Atualizar ID de Ônibus pelo IMEI do Módulo GSM';
+    if (secao === "imei_id") {
+      titulo.textContent = "Atualizar ID de Ônibus pelo IMEI do Módulo GSM";
       conteudo.appendChild(titulo);
 
       const formHTML = `
@@ -184,28 +225,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      conteudo.insertAdjacentHTML('beforeend', formHTML);
+      conteudo.insertAdjacentHTML("beforeend", formHTML);
 
-      const selectBus = document.getElementById('bus_id');
-      const form = document.getElementById('form-imei');
-      const mensagem = document.getElementById('mensagem-resultado');
-      const tabelaBody = document.querySelector('#tabela-imeis tbody');
+      const selectBus = document.getElementById("bus_id");
+      const form = document.getElementById("form-imei");
+      const mensagem = document.getElementById("mensagem-resultado");
+      const tabelaBody = document.querySelector("#tabela-imeis tbody");
 
       function mostrarPopupConfirmacao(mensagem) {
-        return new Promise(resolve => {
-          const fundo = document.getElementById('popup-fundo');
-          const texto = document.getElementById('popup-text');
-          const btnConfirmar = document.getElementById('popup-confirmar');
-          const btnCancelar = document.getElementById('popup-cancelar');
+        return new Promise((resolve) => {
+          const fundo = document.getElementById("popup-fundo");
+          const texto = document.getElementById("popup-text");
+          const btnConfirmar = document.getElementById("popup-confirmar");
+          const btnCancelar = document.getElementById("popup-cancelar");
 
           texto.textContent = mensagem;
-          fundo.style.display = 'flex';
+          fundo.style.display = "flex";
           btnConfirmar.focus();
 
           function fechar(resposta) {
-            fundo.style.display = 'none';
-            btnConfirmar.removeEventListener('click', onConfirmar);
-            btnCancelar.removeEventListener('click', onCancelar);
+            fundo.style.display = "none";
+            btnConfirmar.removeEventListener("click", onConfirmar);
+            btnCancelar.removeEventListener("click", onCancelar);
             resolve(resposta);
           }
 
@@ -216,39 +257,41 @@ document.addEventListener('DOMContentLoaded', () => {
             fechar(false);
           }
 
-          btnConfirmar.addEventListener('click', onConfirmar);
-          btnCancelar.addEventListener('click', onCancelar);
+          btnConfirmar.addEventListener("click", onConfirmar);
+          btnCancelar.addEventListener("click", onCancelar);
         });
       }
 
       // Carrega os ônibus no select
       async function carregarOnibus() {
         try {
-          const res = await fetch('/api/onibus');
+          const res = await fetch("/api/onibus");
           const onibus = await res.json();
-          selectBus.innerHTML = '<option value="" disabled selected>-- Selecione o ônibus --</option>';
+          selectBus.innerHTML =
+            '<option value="" disabled selected>-- Selecione o ônibus --</option>';
 
-          onibus.forEach(bus => {
-            const nomeRota = bus.rota?.nome || 'Sem rota';
-            const opt = document.createElement('option');
+          onibus.forEach((bus) => {
+            const nomeRota = bus.rota?.nome || "Sem rota";
+            const opt = document.createElement("option");
             opt.value = bus.id;
             opt.textContent = `${bus.id} - ${nomeRota}`;
             selectBus.appendChild(opt);
           });
         } catch (e) {
-          selectBus.innerHTML = '<option disabled>Erro ao carregar ônibus</option>';
+          selectBus.innerHTML =
+            "<option disabled>Erro ao carregar ônibus</option>";
         }
       }
 
       // Carrega IMEIs existentes
       async function carregarMapeamentos() {
         try {
-          const res = await fetch('/api/imei_id');
+          const res = await fetch("/api/imei_id");
           const data = await res.json();
-          tabelaBody.innerHTML = '';
+          tabelaBody.innerHTML = "";
 
           Object.entries(data).forEach(([imei, id]) => {
-            const row = document.createElement('tr');
+            const row = document.createElement("tr");
             row.innerHTML = `
               <td>${imei}</td>
               <td>${id}</td>
@@ -261,66 +304,68 @@ document.addEventListener('DOMContentLoaded', () => {
             tabelaBody.appendChild(row);
           });
 
-          document.querySelectorAll('.btn-remover').forEach(btn => {
-            btn.addEventListener('click', async () => {
+          document.querySelectorAll(".btn-remover").forEach((btn) => {
+            btn.addEventListener("click", async () => {
               const imei = btn.dataset.imei;
-              const confirmado = await mostrarPopupConfirmacao(`Remover o IMEI ${imei}?`);
+              const confirmado = await mostrarPopupConfirmacao(
+                `Remover o IMEI ${imei}?`
+              );
               if (confirmado) {
-                const res = await fetch('/api/remover_imei', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ imei })
+                const res = await fetch("/api/remover_imei", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ imei }),
                 });
                 const result = await res.json();
 
                 if (res.ok) {
-                  mensagem.textContent = 'Removido com sucesso!';
-                  mensagem.style.color = 'green';
+                  mensagem.textContent = "Removido com sucesso!";
+                  mensagem.style.color = "green";
                   carregarMapeamentos();
                 } else {
-                  mensagem.textContent = result.error || 'Erro ao remover.';
-                  mensagem.style.color = 'red';
+                  mensagem.textContent = result.error || "Erro ao remover.";
+                  mensagem.style.color = "red";
                 }
               }
             });
           });
-
         } catch (e) {
-          tabelaBody.innerHTML = '<tr><td colspan="3">Erro ao carregar mapeamentos.</td></tr>';
+          tabelaBody.innerHTML =
+            '<tr><td colspan="3">Erro ao carregar mapeamentos.</td></tr>';
         }
       }
 
       // Envia novo IMEI para salvar
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const imei = document.getElementById('imei').value.trim();
-        const id = document.getElementById('bus_id').value;
+        const imei = document.getElementById("imei").value.trim();
+        const id = document.getElementById("bus_id").value;
 
-        mensagem.textContent = 'Salvando...';
-        mensagem.style.color = 'black';
+        mensagem.textContent = "Salvando...";
+        mensagem.style.color = "black";
 
         try {
-          const res = await fetch('/api/salvar_imei', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imei, id })
+          const res = await fetch("/api/salvar_imei", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imei, id }),
           });
 
           const result = await res.json();
 
           if (res.ok) {
-            mensagem.textContent = 'IMEI vinculado com sucesso!';
-            mensagem.style.color = 'green';
+            mensagem.textContent = "IMEI vinculado com sucesso!";
+            mensagem.style.color = "green";
             form.reset();
             carregarMapeamentos();
           } else {
-            mensagem.textContent = result.error || 'Erro ao salvar.';
-            mensagem.style.color = 'red';
+            mensagem.textContent = result.error || "Erro ao salvar.";
+            mensagem.style.color = "red";
           }
         } catch (err) {
-          mensagem.textContent = 'Erro de conexão.';
-          mensagem.style.color = 'red';
+          mensagem.textContent = "Erro de conexão.";
+          mensagem.style.color = "red";
         }
       });
 
@@ -329,37 +374,37 @@ document.addEventListener('DOMContentLoaded', () => {
       carregarMapeamentos();
     }
 
-    const menuLateral = document.getElementById('menu-lateral');
-    if (window.innerWidth <= 768 && menuLateral.classList.contains('active')) {
-      menuLateral.classList.remove('active');
+    const menuLateral = document.getElementById("menu-lateral");
+    if (window.innerWidth <= 768 && menuLateral.classList.contains("active")) {
+      menuLateral.classList.remove("active");
     }
   };
 
   // ----- MODAL FEEDBACK -----
-  const modalFeedback = document.getElementById('modal-feedback');
-  const modalFeedbackText = document.getElementById('modal-feedback-text');
-  const modalFeedbackClose = document.getElementById('modal-feedback-close');
-  const modalLoading = document.getElementById('modal-loading');
+  const modalFeedback = document.getElementById("modal-feedback");
+  const modalFeedbackText = document.getElementById("modal-feedback-text");
+  const modalFeedbackClose = document.getElementById("modal-feedback-close");
+  const modalLoading = document.getElementById("modal-loading");
 
   if (modalFeedbackClose) {
     modalFeedbackClose.onclick = () => {
-      modalFeedback.style.display = 'none';
+      modalFeedback.style.display = "none";
     };
   }
 
   window.onclick = function (event) {
     if (event.target === modalFeedback) {
-      modalFeedback.style.display = 'none';
+      modalFeedback.style.display = "none";
     }
   };
 
   // ----- FUNÇÃO DE UPLOAD XLS -----
   function inicializarUploadXLS() {
-    const fileInput = document.getElementById('file-input');
-    const fileNameDisplay = document.getElementById('file-name');
-    const uploadArea = document.getElementById('upload-area');
-    const feedbackDiv = document.getElementById('upload-feedback');
-    const rotaInput = document.getElementById('upload-xls-rota-id');
+    const fileInput = document.getElementById("file-input");
+    const fileNameDisplay = document.getElementById("file-name");
+    const uploadArea = document.getElementById("upload-area");
+    const feedbackDiv = document.getElementById("upload-feedback");
+    const rotaInput = document.getElementById("upload-xls-rota-id");
 
     // Área clicável
     uploadArea.addEventListener("click", () => fileInput.click());
@@ -395,66 +440,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Envio do arquivo
-    document.getElementById('btn-enviar-xls').addEventListener('click', async () => {
-      feedbackDiv.textContent = '';
-      feedbackDiv.style.color = '';
+    document
+      .getElementById("btn-enviar-xls")
+      .addEventListener("click", async () => {
+        feedbackDiv.textContent = "";
+        feedbackDiv.style.color = "";
 
-      if (!fileInput.files.length) {
-        feedbackDiv.style.color = 'red';
-        feedbackDiv.textContent = "Por favor, selecione um arquivo XLS/XLSX.";
-        return;
-      }
-
-      const rotaId = rotaInput.value.trim();
-      if (!rotaId) {
-        feedbackDiv.style.color = 'red';
-        feedbackDiv.textContent = "Por favor, informe o ID do ônibus para atualizar a rota.";
-        return;
-      }
-
-      modalLoading.style.display = 'flex';
-
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      formData.append('bus_id', rotaId);
-
-      try {
-        const res = await fetch('/api/upload_rota_xls', {
-          method: 'POST',
-          body: formData
-        });
-
-        const json = await res.json();
-
-        if (json.success) {
-          let msg = `Rota atualizada com sucesso para o ônibus ${rotaId}.\n`;
-          msg += `Total de ruas processadas: ${json.total_ruas}\n`;
-          msg += `Coordenadas encontradas: ${json.coordenadas_encontradas}\n`;
-
-          if (json.ruas_sem_coordenada?.length) {
-            msg += `\nNão foram encontradas coordenadas para:\n - ${json.ruas_sem_coordenada.join('\n - ')}`;
-          }
-
-          modalFeedbackText.textContent = msg;
-          modalFeedback.style.display = 'flex';
-
-          fileInput.value = '';
-          rotaInput.value = '';
-          fileNameDisplay.textContent = 'Nenhum arquivo selecionado';
-          feedbackDiv.textContent = '';
-        } else {
-          feedbackDiv.style.color = 'red';
-          feedbackDiv.textContent = 'Erro: ' + (json.error || 'Erro ao atualizar rota.');
+        if (!fileInput.files.length) {
+          feedbackDiv.style.color = "red";
+          feedbackDiv.textContent = "Por favor, selecione um arquivo XLS/XLSX.";
+          return;
         }
-      } catch (err) {
-        feedbackDiv.style.color = 'red';
-        feedbackDiv.textContent = 'Erro ao enviar o arquivo: ' + err.message;
-      } finally {
-        modalLoading.style.display = 'none';
-      }
-    });
+
+        const rotaId = rotaInput.value.trim();
+        if (!rotaId) {
+          feedbackDiv.style.color = "red";
+          feedbackDiv.textContent =
+            "Por favor, informe o ID do ônibus para atualizar a rota.";
+          return;
+        }
+
+        modalLoading.style.display = "flex";
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append("bus_id", rotaId);
+
+        try {
+          const res = await fetch("/api/upload_rota_xls", {
+            method: "POST",
+            body: formData,
+          });
+
+          const json = await res.json();
+
+          if (json.success) {
+            let msg = `Rota atualizada com sucesso para o ônibus ${rotaId}.\n`;
+            msg += `Total de ruas processadas: ${json.total_ruas}\n`;
+            msg += `Coordenadas encontradas: ${json.coordenadas_encontradas}\n`;
+
+            if (json.ruas_sem_coordenada?.length) {
+              msg += `\nNão foram encontradas coordenadas para:\n - ${json.ruas_sem_coordenada.join(
+                "\n - "
+              )}`;
+            }
+
+            modalFeedbackText.textContent = msg;
+            modalFeedback.style.display = "flex";
+
+            fileInput.value = "";
+            rotaInput.value = "";
+            fileNameDisplay.textContent = "Nenhum arquivo selecionado";
+            feedbackDiv.textContent = "";
+          } else {
+            feedbackDiv.style.color = "red";
+            feedbackDiv.textContent =
+              "Erro: " + (json.error || "Erro ao atualizar rota.");
+          }
+        } catch (err) {
+          feedbackDiv.style.color = "red";
+          feedbackDiv.textContent = "Erro ao enviar o arquivo: " + err.message;
+        } finally {
+          modalLoading.style.display = "none";
+        }
+      });
   }
 });
-
-
-

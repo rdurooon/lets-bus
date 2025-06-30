@@ -315,6 +315,30 @@ def api_onibus():
     dados = carregar_dados_onibus()
     return jsonify(dados)
 
+@routes.route('/api/set_visibility', methods=['POST'])
+def set_visibility():
+    data = request.get_json()
+    bus_id = str(data.get('id'))
+    visivel = data.get('visivel')
+
+    with open(onibus_dados_path, 'r') as f:
+        dados = json.load(f)
+
+    onibus_encontrado = False
+    for bus in dados:
+        if str(bus.get('id')) == bus_id:
+            bus['visivel'] = visivel
+            onibus_encontrado = True
+            break
+
+    if not onibus_encontrado:
+        return jsonify({'erro': 'ID do ônibus não encontrado'}), 404
+
+    with open(onibus_dados_path, 'w') as f:
+        json.dump(dados, f, indent=2)
+
+    return jsonify({'ok': True})
+
 @routes.route('/api/imei_id', methods=['GET'])
 def listar_imei_id():
     dados = carregar_imei_id()
@@ -357,7 +381,6 @@ def remover_imei():
     if not imei:
         return jsonify({'error': 'IMEI não fornecido'}), 400
     try:
-        # Remover do armazenamento (arquivo, banco, etc)
         remover_imei_id(imei)
         return jsonify({'success': True}), 200
     except Exception as e:
@@ -736,9 +759,9 @@ def upload_rota_xls():
             origem = coords[i]
             destino = coords[i + 1]
 
-            caminho = obter_rota_osrm(origem, destino)
-            if caminho:
-                rota_coords.extend([[lat, lng] for lng, lat in caminho])
+            onibus_dados_path = obter_rota_osrm(origem, destino)
+            if onibus_dados_path:
+                rota_coords.extend([[lat, lng] for lng, lat in onibus_dados_path])
             else:
                 print(f"Falha na rota OSRM entre pontos {origem} e {destino}, adicionando linha reta.")
                 falhas_osrm.append({'de': origem, 'para': destino})
