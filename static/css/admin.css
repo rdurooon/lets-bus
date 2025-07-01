@@ -8,7 +8,7 @@ html {
 
 .admin-container {
   display: flex;
-  height: 100dvh;
+  min-height: 100vh;
 }
 
 /* Sidebar */
