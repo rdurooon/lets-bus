@@ -315,6 +315,23 @@ def api_onibus():
     dados = carregar_dados_onibus()
     return jsonify(dados)
 
+@routes.route("/api/add_bus", methods=["POST"])
+def add_bus():
+    novo = request.get_json()
+
+    with open(onibus_dados_path, "r") as f:
+        buses = json.load(f)
+
+    if any(bus["id"] == novo["id"] for bus in buses):
+        return jsonify({"erro": "ID já existe"}), 400
+
+    buses.append(novo)
+
+    with open(onibus_dados_path, "w") as f:
+        json.dump(buses, f, indent=4)
+
+    return jsonify({"sucesso": True})
+
 @routes.route('/api/set_visibility', methods=['POST'])
 def set_visibility():
     data = request.get_json()

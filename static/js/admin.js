@@ -122,9 +122,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (secao === "cadastrar-onibus") {
       titulo.textContent = "Cadastrar Novo Ônibus";
+      conteudo.innerHTML = "";
+
       const formHTML = `
         <div class="form-container">
-          <form class="onibus-form">
+          <form id="onibus-form" class="onibus-form">
             <label for="id-bus">ID do Ônibus</label>
             <input type="text" id="id-bus" name="id-bus" placeholder="Ex: 1000" required>
 
@@ -132,15 +134,81 @@ document.addEventListener("DOMContentLoaded", () => {
             <input type="text" id="rota" name="rota" placeholder="Ex: Fazendinha" required>
 
             <label for="color">Cor da rota</label>
-            <input type="number" id="color" name="color" placeholder="Ex: Vermenlho ou #FFFFF" required>
+            <input type="color" id="color" name="color" required>
 
             <button type="submit">Cadastrar</button>
           </form>
         </div>
+        <div id="popup-msg" class="popup-mensagem" style="display: none;"></div>
       `;
 
       conteudo.appendChild(titulo);
       conteudo.insertAdjacentHTML("beforeend", formHTML);
+
+      function mostrarPopup(mensagem, tipo = "sucesso") {
+        const popup = document.getElementById("popup-msg");
+        popup.textContent = mensagem;
+        popup.className = `popup-mensagem popup-${tipo}`;
+        popup.style.display = "block";
+        popup.style.opacity = 1;
+
+        setTimeout(() => {
+          popup.style.opacity = 0;
+          setTimeout(() => {
+            popup.style.display = "none";
+          }, 3000);
+        }, 3000);
+      }
+
+      const form = document.getElementById("onibus-form");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById("id-bus").value.trim();
+        const rota = document.getElementById("rota").value.trim();
+        const cor = document.getElementById("color").value.trim();
+
+        if (!id || !rota || !cor) {
+          mostrarPopup("Preencha todos os campos.", "erro");
+          return;
+        }
+
+        const novoBus = {
+          id,
+          lat: "0.0",
+          lng: "0.0",
+          rota: {
+            nome: rota,
+            cor: cor,
+            coords: [],
+          },
+          votos: {
+            vazio: 0,
+            poucos: 0,
+            muitos: 0,
+            lotado: 0,
+          },
+          visivel: false,
+        };
+
+        try {
+          const resposta = await fetch("/api/add_bus", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(novoBus),
+          });
+
+          if (resposta.ok) {
+            mostrarPopup("Ônibus cadastrado com sucesso!", "sucesso");
+            form.reset();
+          } else {
+            mostrarPopup("Erro ao cadastrar ônibus.", "erro");
+          }
+        } catch (erro) {
+          console.error("Erro na requisição:", erro);
+          mostrarPopup("Erro de conexão com o servidor.", "erro");
+        }
+      });
     }
 
     if (secao === "upload-xls") {

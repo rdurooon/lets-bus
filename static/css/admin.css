@@ -20,11 +20,13 @@ html {
 }
 
 .sidebar {
+  position: fixed;
   width: 250px;
   background-color: blueviolet;
   color: white;
   display: flex;
   flex-direction: column;
+  height: 100%;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -87,6 +89,7 @@ html {
 }
 
 .voltar-mapa {
+  position: relative;
   margin-top: auto;
   padding: 10px;
   background-color: #fff;
@@ -102,7 +105,11 @@ html {
   flex: 1;
   padding: 40px;
   overflow-y: auto;
+  margin-left: 250px;
+  position: relative; 
+  z-index: 1;
 }
+
 
 .titulo-central {
   margin-top: 300px;
@@ -138,6 +145,7 @@ html {
   }
 
   .admin-main {
+    margin-left: 0;
     padding: 20px;
   }
 
@@ -481,4 +489,63 @@ input:checked + .slider:before {
   margin-left: 10px;
   font-size: 14px;
   color: #333;
+}
+
+.popup-mensagem {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 12px;
+  background-color: white;
+  border: 2px solid #6a0dad;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #333;
+  font-weight: 500;
+  z-index: 1000;
+  max-width: 300px;
+  transition: opacity 0.3s ease;
+}
+
+.popup-sucesso {
+  border-color: #6a0dad;
+}
+
+.popup-erro {
+  border-color: red;
+  color: red;
+}
+
+.onibus-form input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: 2px solid blueviolet;
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: none;
+}
+
+.onibus-form input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 12px;
+}
+
+.onibus-form input[type="color"]::-moz-color-swatch {
+  border-radius: 12px;
+  border: none;
+}
+
+.onibus-form input[type="color"]:focus {
+  outline: none;
+  border-color: #8a2be2;
+  box-shadow: 0 0 8px 2px rgba(138, 43, 226, 0.5);
+}
+
+.onibus-form input[type="color"]:hover {
+  border-color: #6a1fb3;
 }
